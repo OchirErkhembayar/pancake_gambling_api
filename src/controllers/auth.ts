@@ -36,6 +36,19 @@ const signup = async (req: Request, res: Response) => {
     })
   }
   try {
+    if (confirmedPassword !== password) {
+      const error = new Error('Passwords do not match.') as CustomError;
+      error.statusCode = 422;
+      error.data = [{
+        value: "******",
+        msg: "Passwords do not match!",
+        params: "confirmedPassword",
+        location: "body"
+      }];
+      return res.status(422).json({
+        error: error
+      })
+    }
     const hashedPw = await bcrypt.hash(password, 12);
     const user = await User.create({
       email: email,

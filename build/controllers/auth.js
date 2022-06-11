@@ -33,6 +33,19 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     try {
+        if (confirmedPassword !== password) {
+            const error = new Error('Passwords do not match.');
+            error.statusCode = 422;
+            error.data = [{
+                    value: "******",
+                    msg: "Passwords do not match!",
+                    params: "confirmedPassword",
+                    location: "body"
+                }];
+            return res.status(422).json({
+                error: error
+            });
+        }
         const hashedPw = yield bcrypt_1.default.hash(password, 12);
         const user = yield user_1.default.create({
             email: email,

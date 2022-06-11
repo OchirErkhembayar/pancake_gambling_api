@@ -2,7 +2,18 @@ import Sequelize from "sequelize";
 
 import sequelize from "../util/database";
 
-const Athlete = sequelize.define('athlete', {
+interface IAthlete extends Sequelize.Model {
+  id: number;
+  firstName: string;
+  lastName: string;
+  age: number;
+  gender: string;
+  wins: number;
+  losses: number;
+  nationality: string;
+}
+
+const Athlete = sequelize.define<IAthlete>('athlete', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
