@@ -5,6 +5,8 @@ import fs from "fs";
 import path from "path";
 
 import authRoutes from "./routes/auth";
+import athleteRoutes from "./routes/athlete";
+import matchRoutes from "./routes/match";
 import sequelize from "./util/database";
 import Match from "./models/match";
 import Athlete from "./models/athlete";
@@ -18,6 +20,8 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/auth', authRoutes);
+app.use('/athlete', athleteRoutes);
+app.use('/match', matchRoutes);
 
 User.hasMany(Bet, { onDelete: 'cascade' });
 Bet.belongsTo(User);
