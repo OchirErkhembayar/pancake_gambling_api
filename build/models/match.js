@@ -5,40 +5,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = __importDefault(require("sequelize"));
 const database_1 = __importDefault(require("../util/database"));
-const Athlete = database_1.default.define('athlete', {
+const Match = database_1.default.define('match', {
     id: {
         type: sequelize_1.default.INTEGER,
         autoIncrement: true,
         allowNull: false,
         primaryKey: true
     },
-    firstName: {
+    title: {
         type: sequelize_1.default.STRING,
         allowNull: false
     },
-    lastName: {
+    description: {
         type: sequelize_1.default.STRING,
         allowNull: false
     },
-    age: {
+    country: {
+        type: sequelize_1.default.STRING,
+        allowNull: true
+    },
+    city: {
+        type: sequelize_1.default.STRING,
+        allowNull: true
+    },
+    date: {
+        type: sequelize_1.default.DATE,
+        allowNull: true
+    },
+    weightLimit: {
         type: sequelize_1.default.INTEGER,
-        allowNull: false
-    },
-    gender: {
-        type: sequelize_1.default.STRING,
-        allowNull: false
-    },
-    wins: {
-        type: sequelize_1.default.INTEGER,
-        allowNull: false
-    },
-    losses: {
-        type: sequelize_1.default.INTEGER,
-        allowNull: false
-    },
-    nationality: {
-        type: sequelize_1.default.STRING,
-        allowNull: false
+        allowNull: true
     }
 }, { timestamps: true });
-exports.default = Athlete;
+exports.default = Match;
