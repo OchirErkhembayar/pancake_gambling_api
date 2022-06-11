@@ -2,7 +2,17 @@ import Sequelize from 'sequelize';
 
 import sequelize from "../util/database";
 
-const Match = sequelize.define('match', {
+interface IMatch extends Sequelize.Model {
+  id: number;
+  title: string;
+  description: string;
+  country: string;
+  city: string;
+  date: Date;
+  weightLimit: number;
+}
+
+const Match = sequelize.define<IMatch>('match', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,

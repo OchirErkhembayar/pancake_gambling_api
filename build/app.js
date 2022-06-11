@@ -23,10 +23,12 @@ app.use('/athlete', athlete_1.default);
 app.use('/match', match_1.default);
 user_1.default.hasMany(bet_1.default, { onDelete: 'cascade' });
 bet_1.default.belongsTo(user_1.default);
-bet_1.default.belongsTo(match_athlete_1.default);
+bet_1.default.belongsTo(match_athlete_1.default, { onDelete: 'cascade' });
 match_athlete_1.default.hasMany(bet_1.default);
 match_2.default.belongsToMany(athlete_2.default, { through: match_athlete_1.default });
-athlete_2.default.hasMany(match_2.default);
+athlete_2.default.belongsToMany(match_2.default, { through: match_athlete_1.default });
+match_athlete_1.default.belongsTo(match_2.default, { onDelete: 'cascade' });
+match_athlete_1.default.belongsTo(athlete_2.default, { onDelete: 'cascade' });
 database_1.default
     .sync()
     .then(result => {

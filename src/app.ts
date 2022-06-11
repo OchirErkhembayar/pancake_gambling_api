@@ -25,10 +25,12 @@ app.use('/match', matchRoutes);
 
 User.hasMany(Bet, { onDelete: 'cascade' });
 Bet.belongsTo(User);
-Bet.belongsTo(MatchAthlete);
+Bet.belongsTo(MatchAthlete, { onDelete: 'cascade' });
 MatchAthlete.hasMany(Bet);
 Match.belongsToMany(Athlete, { through: MatchAthlete });
-Athlete.hasMany(Match);
+Athlete.belongsToMany(Match, { through: MatchAthlete });
+MatchAthlete.belongsTo(Match, {onDelete: 'cascade'});
+MatchAthlete.belongsTo(Athlete, {onDelete: 'cascade'})
 
 sequelize
   .sync()

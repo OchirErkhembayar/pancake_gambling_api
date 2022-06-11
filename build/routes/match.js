@@ -4,10 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const match_1 = __importDefault(require("../controllers/match"));
 const router = express_1.default.Router();
-router.get('/all-matches');
-router.get('/:matchId');
-router.post('/new-match');
+router.get('/all-matches', match_1.default.getMatches);
+router.get('/:matchId', match_1.default.getMatch);
+router.post('/new-match', match_1.default.createMatch);
 router.patch('/result/:matchId');
-router.delete('/delete/:matchId');
+router.delete('/delete/:matchId', match_1.default.deleteMatch);
 exports.default = router;
