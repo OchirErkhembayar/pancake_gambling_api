@@ -2,7 +2,18 @@ import Sequelize from 'sequelize';
 
 import sequelize from "../util/database";
 
-const User = sequelize.define('user', {
+interface IUser extends Sequelize.Model {
+  id: number;
+  email: string;
+  username: string;
+  password: string;
+  admin: boolean;
+  balance: Float32Array;
+  resetToken?: string;
+  resetTokenExpiration?: Date;
+}
+
+const User = sequelize.define<IUser>('user', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,

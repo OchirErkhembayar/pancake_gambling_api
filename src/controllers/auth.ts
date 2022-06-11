@@ -56,4 +56,40 @@ const signup = async (req: Request, res: Response) => {
   }
 };
 
-export default { signup }
+const login = async (req: Request, res: Response) => {
+  const body = req.body as RequestBody;
+  const username = body.username;
+  const password = body.password;
+  try {
+    const loadedUser = await User.findOne({
+      where: { username: username }
+    });
+    if (!loadedUser) {
+      const error = new Error("No user with this username found.") as CustomError;
+      error.statusCode = 422;
+      throw error;
+    }
+    const isEqual = await bcrypt.compare(password, loadedUser.password);
+    if (!isEqual) {
+      const error = new Error("Wrong password.") as CustomError;
+      error.statusCode = 422;
+      throw error;
+    }
+    const token = jwt.sign({
+      email: loadedUser.email,
+      userId: loadedUser.id
+    }, `${process.env.JWT_PW}`,
+    { expiresIn: '1h' });
+    res.status(200).json({
+      token: token,
+      userId: loadedUser.id
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error,
+      message: "Failed to login."
+    })
+  }
+}
+
+export default { signup, login }
