@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_validator_1 = require("express-validator");
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
@@ -52,4 +53,39 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
 });
-exports.default = { signup };
+const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const body = req.body;
+    const username = body.username;
+    const password = body.password;
+    try {
+        const loadedUser = yield user_1.default.findOne({
+            where: { username: username }
+        });
+        if (!loadedUser) {
+            const error = new Error("No user with this username found.");
+            error.statusCode = 422;
+            throw error;
+        }
+        const isEqual = yield bcrypt_1.default.compare(password, loadedUser.password);
+        if (!isEqual) {
+            const error = new Error("Wrong password.");
+            error.statusCode = 422;
+            throw error;
+        }
+        const token = jsonwebtoken_1.default.sign({
+            email: loadedUser.email,
+            userId: loadedUser.id
+        }, `${process.env.JWT_PW}`, { expiresIn: '1h' });
+        res.status(200).json({
+            token: token,
+            userId: loadedUser.id
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            error: error,
+            message: "Failed to login."
+        });
+    }
+});
+exports.default = { signup, login };
