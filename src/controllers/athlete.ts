@@ -16,6 +16,7 @@ type RequestBody = {
   losses?: number;
   nationality?: string;
   age?: number;
+  nickName: string;
 }
 
 type RequestParams = {
@@ -81,6 +82,7 @@ const createAthlete = async (req: Request, res: Response) => {
     const athlete = await Athlete.create({
       firstName: body.firstName,
       lastName: body.lastName,
+      nickName: body.nickName,
       age: body.age,
       nationality: body.nationality,
       gender: body.gender,

@@ -74,6 +74,7 @@ const createAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const athlete = yield athlete_1.default.create({
             firstName: body.firstName,
             lastName: body.lastName,
+            nickName: body.nickName,
             age: body.age,
             nationality: body.nationality,
             gender: body.gender,
