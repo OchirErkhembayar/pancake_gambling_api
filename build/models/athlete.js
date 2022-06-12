@@ -20,6 +20,10 @@ const Athlete = database_1.default.define('athlete', {
         type: sequelize_1.default.STRING,
         allowNull: false
     },
+    // nickName: {
+    //   type: Sequelize.STRING,
+    //   allowNull: true
+    // },
     age: {
         type: sequelize_1.default.INTEGER,
         allowNull: false

@@ -2,7 +2,14 @@ import Sequelize from 'sequelize';
 
 import sequelize from "../util/database";
 
-const MatchAthlete = sequelize.define('matchAthlete', {
+interface IMatchAthlete extends Sequelize.Model {
+  id: number;
+  matchId: number;
+  odds: number;
+  result: boolean;
+}
+
+const MatchAthlete = sequelize.define<IMatchAthlete>('matchAthlete', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,

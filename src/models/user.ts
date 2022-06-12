@@ -8,7 +8,7 @@ interface IUser extends Sequelize.Model {
   username: string;
   password: string;
   admin: boolean;
-  balance: Float32Array;
+  balance: number;
   resetToken?: string;
   resetTokenExpiration?: Date;
 }

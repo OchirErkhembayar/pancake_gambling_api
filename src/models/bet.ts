@@ -2,7 +2,14 @@ import Sequelize from 'sequelize';
 
 import sequelize from "../util/database";
 
-const Bet = sequelize.define('bet', {
+interface IBet extends Sequelize.Model {
+  id: number;
+  amount: number;
+  result: boolean;
+  winnings: number;
+}
+
+const Bet = sequelize.define<IBet>('bet', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,

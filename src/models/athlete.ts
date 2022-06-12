@@ -28,6 +28,10 @@ const Athlete = sequelize.define<IAthlete>('athlete', {
     type: Sequelize.STRING,
     allowNull: false
   },
+  // nickName: {
+  //   type: Sequelize.STRING,
+  //   allowNull: true
+  // },
   age: {
     type: Sequelize.INTEGER,
     allowNull: false
