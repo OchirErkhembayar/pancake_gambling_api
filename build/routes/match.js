@@ -9,6 +9,6 @@ const router = express_1.default.Router();
 router.get('/all-matches', match_1.default.getMatches);
 router.get('/:matchId', match_1.default.getMatch);
 router.post('/new-match', match_1.default.createMatch);
-router.patch('/result/:matchId');
+router.patch('/result/', match_1.default.matchResult);
 router.delete('/delete/:matchId', match_1.default.deleteMatch);
 exports.default = router;

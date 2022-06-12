@@ -2,11 +2,14 @@ import Sequelize from 'sequelize';
 
 import sequelize from "../util/database";
 
+import { IAthlete } from "./athlete";
+
 interface IMatchAthlete extends Sequelize.Model {
   id: number;
   matchId: number;
   odds: number;
   result: boolean;
+  athlete: IAthlete
 }
 
 const MatchAthlete = sequelize.define<IMatchAthlete>('matchAthlete', {

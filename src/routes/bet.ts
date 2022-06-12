@@ -7,7 +7,6 @@ const router = express.Router();
 
 router.get('/all-bets', betController.getAllBets);
 
-
 router.get('/single-user/:userId', betController.getUserBets);
 
 router.get('/single-match/:matchId', betController.getMatchBets);

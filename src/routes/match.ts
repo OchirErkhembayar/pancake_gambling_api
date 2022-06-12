@@ -1,3 +1,4 @@
+import { match } from "assert";
 import express from "express";
 import { body } from "express-validator";
 
@@ -11,7 +12,7 @@ router.get('/:matchId', matchController.getMatch);
 
 router.post('/new-match', matchController.createMatch);
 
-router.patch('/result/:matchId')
+router.patch('/result/', matchController.matchResult);
 
 router.delete('/delete/:matchId', matchController.deleteMatch);
 
