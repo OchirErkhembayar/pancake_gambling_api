@@ -11,6 +11,7 @@ interface IAthlete extends Sequelize.Model {
   wins: number;
   losses: number;
   nationality: string;
+  nickname: string;
 }
 
 export { IAthlete };
@@ -30,10 +31,10 @@ const Athlete = sequelize.define<IAthlete>('athlete', {
     type: Sequelize.STRING,
     allowNull: false
   },
-  // nickName: {
-  //   type: Sequelize.STRING,
-  //   allowNull: true
-  // },
+  nickName: {
+    type: Sequelize.STRING,
+    allowNull: true
+  },
   age: {
     type: Sequelize.INTEGER,
     allowNull: false
