@@ -55,7 +55,7 @@ const signup = async (req: Request, res: Response) => {
       username: username,
       password: hashedPw,
       admin: false,
-      balance: 0
+      balance: 1000
     });
     res.status(201).json({
       message: "User created.",
