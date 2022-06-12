@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.get('/all-matches', matchController.getMatches);
 
+router.get('/upcoming-matches', matchController.getUpcomingMatches);
+
 router.get('/:matchId', matchController.getMatch);
 
 router.post('/new-match', matchController.createMatch);

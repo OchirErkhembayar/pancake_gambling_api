@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction} from "express";
 import { validationResult } from "express-validator";
 import { IntegerDataType } from "sequelize/types";
+import { Op } from "sequelize";
 
 import Athlete from "../models/athlete";
 import Bet from "../models/bet";
@@ -46,6 +47,34 @@ const getMatches = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       message: "Failed to fetch matches.",
+      error: error
+    });
+  }
+}
+
+const getUpcomingMatches = async (req: Request, res: Response) => {
+  try {
+    const date = new Date(Date.now() - (3600 * 1000 * 24))
+    console.log(date);
+    const matches = await Match.findAll({
+      where: {
+        date: {
+          [Op.gte]: date
+        }
+      }
+    });
+    if (!matches) {
+      return res.status(500).json({
+        message: "Failed to fetch upcoming matches."
+      });
+    }
+    res.status(200).json({
+      message: "Upcoming matches successfully retrieved.",
+      matches: matches
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch upcoming matches.",
       error: error
     });
   }
@@ -273,4 +302,4 @@ const deleteMatch = async (req: Request, res: Response) => {
   }
 }
 
-export default { getMatches, getMatch, createMatch, matchResult, deleteMatch };
+export default { getMatches, getUpcomingMatches, getMatch, createMatch, matchResult, deleteMatch };
