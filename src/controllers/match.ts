@@ -4,6 +4,7 @@ import { IntegerDataType } from "sequelize/types";
 
 import Athlete from "../models/athlete";
 import Bet from "../models/bet";
+import User from "../models/user";
 import Match from "../models/match";
 import MatchAthlete from "../models/match-athlete";
 import athlete from "./athlete";
@@ -17,6 +18,8 @@ type RequestBody = {
   weightLimit: number;
   athleteOne: athleteObject;
   athleteTwo: athleteObject;
+  winnerId: number;
+  loserId: number;
 }
 
 type athleteObject = {
@@ -142,6 +145,103 @@ const createMatch = async (req: Request, res: Response) => {
   }
 }
 
+const matchResult = async (req: Request, res: Response) => {
+  const body = req.body as RequestBody;
+  try {
+    const winner = await MatchAthlete.findByPk(
+      body.winnerId,
+      { include: Athlete }
+      );
+    if (!winner) {
+      return res.status(500).json({
+        message: "Could not find the winner of the match by ID."
+      });
+    }
+    if (winner.result !== null) {
+      return res.status(500).json({
+        message: "This result of this match has already been decided."
+      });
+    }
+    const loser = await MatchAthlete.findByPk(
+      body.loserId,
+      { include: Athlete }
+      );
+    if (!loser) {
+      return res.status(500).json({
+        message: "Could not find the loser of the match by ID."
+      });
+    }
+    winner.result = true;
+    winner.athlete.wins++;
+    loser.result = false;
+    loser.athlete.losses++;
+    await winner.save();
+    await loser.save();
+    await winner.athlete.save();
+    await loser.athlete.save();
+    const wonBets = await Bet.findAll({
+      where: {
+        matchAthleteId: winner.id
+      }
+    });
+    if (!wonBets) {
+      return res.status(500).json({
+        message: "Failed to fetch won bets."
+      });
+    }
+    for (let i = 0; i < wonBets.length; i++) {
+      wonBets[i].result = true;
+      let user = await User.findOne({
+        where: {
+          id: wonBets[i].userId
+        }
+      });
+      if (!user) {
+        return res.status(500).json({
+          message: `Failed to update balance for ${wonBets[i]}`
+        });
+      }
+      if (winner.odds > 0) {
+        wonBets[i].winnings = wonBets[i].amount * (winner.odds / 100);
+        user.balance += wonBets[i].winnings;
+      }
+      if (winner.odds < 0) {
+        wonBets[i].winnings = Math.abs(wonBets[i].amount / (winner.odds / 100));
+        user.balance += Math.abs(wonBets[i].winnings);
+      }
+      user.balance += wonBets[i].amount;
+      await user.save();
+      await wonBets[i].save();
+    }
+    const lostBets = await Bet.findAll({
+      where: {
+        matchAthleteId: loser.id
+      }
+    });
+    if (!lostBets) {
+      return res.status(500).json({
+        message: "Failed to retrieve loser bets."
+      });
+    }
+    for (let i = 0; i < lostBets.length; i++) {
+      lostBets[i].result = false;
+      lostBets[i].winnings -= lostBets[i].amount;
+      await lostBets[i].save();
+    }
+    return res.status(500).json({
+      message: "Successfully set match results and paid of winnings.",
+      winner: winner,
+      loser: loser,
+
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to set match winner.",
+      error: error
+    })
+  }
+}
+
 const deleteMatch = async (req: Request, res: Response) => {
   const params = req.params as RequestParams;
   try {
@@ -173,4 +273,4 @@ const deleteMatch = async (req: Request, res: Response) => {
   }
 }
 
-export default { getMatches, getMatch, createMatch, deleteMatch };
+export default { getMatches, getMatch, createMatch, matchResult, deleteMatch };

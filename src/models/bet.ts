@@ -7,6 +7,8 @@ interface IBet extends Sequelize.Model {
   amount: number;
   result: boolean;
   winnings: number;
+  userId: number;
+  matchAthleteId: number;
 }
 
 const Bet = sequelize.define<IBet>('bet', {

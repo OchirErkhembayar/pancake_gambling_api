@@ -13,6 +13,8 @@ interface IAthlete extends Sequelize.Model {
   nationality: string;
 }
 
+export { IAthlete };
+
 const Athlete = sequelize.define<IAthlete>('athlete', {
   id: {
     type: Sequelize.INTEGER,

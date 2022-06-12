@@ -13,6 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const athlete_1 = __importDefault(require("../models/athlete"));
+const bet_1 = __importDefault(require("../models/bet"));
+const user_1 = __importDefault(require("../models/user"));
 const match_1 = __importDefault(require("../models/match"));
 const match_athlete_1 = __importDefault(require("../models/match-athlete"));
 const getMatches = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -129,6 +131,96 @@ const createMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
 });
+const matchResult = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const body = req.body;
+    try {
+        const winner = yield match_athlete_1.default.findByPk(body.winnerId, { include: athlete_1.default });
+        if (!winner) {
+            return res.status(500).json({
+                message: "Could not find the winner of the match by ID."
+            });
+        }
+        if (winner.result !== null) {
+            return res.status(500).json({
+                message: "This result of this match has already been decided."
+            });
+        }
+        const loser = yield match_athlete_1.default.findByPk(body.loserId, { include: athlete_1.default });
+        if (!loser) {
+            return res.status(500).json({
+                message: "Could not find the loser of the match by ID."
+            });
+        }
+        winner.result = true;
+        winner.athlete.wins++;
+        loser.result = false;
+        loser.athlete.losses++;
+        yield winner.save();
+        yield loser.save();
+        yield winner.athlete.save();
+        yield loser.athlete.save();
+        const wonBets = yield bet_1.default.findAll({
+            where: {
+                matchAthleteId: winner.id
+            }
+        });
+        if (!wonBets) {
+            return res.status(500).json({
+                message: "Failed to fetch won bets."
+            });
+        }
+        for (let i = 0; i < wonBets.length; i++) {
+            wonBets[i].result = true;
+            let user = yield user_1.default.findOne({
+                where: {
+                    id: wonBets[i].userId
+                }
+            });
+            if (!user) {
+                return res.status(500).json({
+                    message: `Failed to update balance for ${wonBets[i]}`
+                });
+            }
+            if (winner.odds > 0) {
+                wonBets[i].winnings = wonBets[i].amount * (winner.odds / 100);
+                user.balance += wonBets[i].winnings;
+            }
+            if (winner.odds < 0) {
+                wonBets[i].winnings = Math.abs(wonBets[i].amount / (winner.odds / 100));
+                user.balance += Math.abs(wonBets[i].winnings);
+            }
+            user.balance += wonBets[i].amount;
+            yield user.save();
+            yield wonBets[i].save();
+        }
+        const lostBets = yield bet_1.default.findAll({
+            where: {
+                matchAthleteId: loser.id
+            }
+        });
+        if (!lostBets) {
+            return res.status(500).json({
+                message: "Failed to retrieve loser bets."
+            });
+        }
+        for (let i = 0; i < lostBets.length; i++) {
+            lostBets[i].result = false;
+            lostBets[i].winnings -= lostBets[i].amount;
+            yield lostBets[i].save();
+        }
+        return res.status(500).json({
+            message: "Successfully set match results and paid of winnings.",
+            winner: winner,
+            loser: loser,
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Failed to set match winner.",
+            error: error
+        });
+    }
+});
 const deleteMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const params = req.params;
     try {
@@ -159,4 +251,4 @@ const deleteMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     catch (error) {
     }
 });
-exports.default = { getMatches, getMatch, createMatch, deleteMatch };
+exports.default = { getMatches, getMatch, createMatch, matchResult, deleteMatch };
