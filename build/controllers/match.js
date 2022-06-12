@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const sequelize_1 = require("sequelize");
 const athlete_1 = __importDefault(require("../models/athlete"));
 const bet_1 = __importDefault(require("../models/bet"));
 const user_1 = __importDefault(require("../models/user"));
@@ -33,6 +34,34 @@ const getMatches = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         return res.status(500).json({
             message: "Failed to fetch matches.",
+            error: error
+        });
+    }
+});
+const getUpcomingMatches = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const date = new Date(Date.now() - (3600 * 1000 * 24));
+        console.log(date);
+        const matches = yield match_1.default.findAll({
+            where: {
+                date: {
+                    [sequelize_1.Op.gte]: date
+                }
+            }
+        });
+        if (!matches) {
+            return res.status(500).json({
+                message: "Failed to fetch upcoming matches."
+            });
+        }
+        res.status(200).json({
+            message: "Upcoming matches successfully retrieved.",
+            matches: matches
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Failed to fetch upcoming matches.",
             error: error
         });
     }
@@ -251,4 +280,4 @@ const deleteMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     catch (error) {
     }
 });
-exports.default = { getMatches, getMatch, createMatch, matchResult, deleteMatch };
+exports.default = { getMatches, getUpcomingMatches, getMatch, createMatch, matchResult, deleteMatch };
