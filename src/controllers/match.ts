@@ -55,7 +55,6 @@ const getMatches = async (req: Request, res: Response) => {
 const getUpcomingMatches = async (req: Request, res: Response) => {
   try {
     const date = new Date(Date.now() - (3600 * 1000 * 24))
-    console.log(date);
     const matches = await Match.findAll({
       where: {
         date: {
@@ -298,7 +297,10 @@ const deleteMatch = async (req: Request, res: Response) => {
       message: "Successfully deleted match and match-athletes."
     });
   } catch (error) {
-
+    return res.status(500).json({
+      message: "Failed to delete match.",
+      error: error
+    });
   }
 }
 

@@ -58,7 +58,6 @@ const getMatchBets = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 message: "Could not find match with given ID"
             });
         }
-        console.log(matchAthlete);
         const bets = yield bet_1.default.findAll({
             where: {
                 matchAthleteId: matchAthlete.map(a => a.id)

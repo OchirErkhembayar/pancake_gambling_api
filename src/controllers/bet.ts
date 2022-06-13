@@ -61,7 +61,6 @@ const getMatchBets = async (req: Request, res: Response) => {
         message: "Could not find match with given ID"
       });
     }
-    console.log(matchAthlete);
     const bets = await Bet.findAll({
       where: {
         matchAthleteId: matchAthlete.map(a => a.id)
