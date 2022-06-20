@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const express_validator_1 = require("express-validator");
 const auth_1 = __importDefault(require("../controllers/auth"));
 const user_1 = __importDefault(require("../models/user"));
+const is_auth_1 = require("../middleware/is-auth");
 const router = express_1.default.Router();
 router.post('/signup', [
     (0, express_validator_1.body)('username')
@@ -41,4 +42,6 @@ router.post('/signup', [
     })
 ], auth_1.default.signup);
 router.post('/login', auth_1.default.login);
+router.get('/get-user/:userId', is_auth_1.authUser, auth_1.default.getUser);
+router.get('/top', auth_1.default.richestUsers);
 exports.default = router;

@@ -35,6 +35,11 @@ const Match = database_1.default.define('match', {
     weightLimit: {
         type: sequelize_1.default.INTEGER,
         allowNull: true
+    },
+    completed: {
+        type: sequelize_1.default.BOOLEAN,
+        defaultValue: false,
+        allowNull: true
     }
 }, { timestamps: true });
 exports.default = Match;

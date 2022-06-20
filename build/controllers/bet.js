@@ -185,12 +185,29 @@ const createBet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 message: "Failed to create bet"
             });
         }
+        let betDetails = yield bet_1.default.findOne({
+            where: {
+                id: bet.id
+            },
+            include: [{
+                    model: match_athlete_1.default,
+                    include: [{
+                            model: athlete_1.default
+                        }]
+                }]
+        });
+        if (!betDetails) {
+            return res.status(500).json({
+                message: "Bet created. Failed to fetch bet details",
+                bet: bet,
+                matchAthlete: matchAthlete
+            });
+        }
         user.balance -= bet.amount;
         yield user.save();
         return res.status(200).json({
             message: "Successfully created bet",
-            bet: bet,
-            matchAthlete: matchAthlete
+            bet: betDetails
         });
     }
     catch (error) {

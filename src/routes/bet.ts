@@ -2,6 +2,7 @@ import express from "express";
 import { body } from "express-validator";
 
 import betController from "../controllers/bet";
+import { authUser } from "../middleware/is-auth";
 
 const router = express.Router();
 
@@ -13,6 +14,6 @@ router.get('/single-match/:matchId', betController.getMatchBets);
 
 router.get('/:betId', betController.getSingleBet);
 
-router.post('/create-bet/:userId/:matchAthleteId', betController.createBet);
+router.post('/create-bet/:userId/:matchAthleteId', authUser, betController.createBet);
 
 export default router;

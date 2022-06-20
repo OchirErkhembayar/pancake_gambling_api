@@ -16,6 +16,10 @@ const express_validator_1 = require("express-validator");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
+const database_1 = __importDefault(require("../util/database"));
+const bet_1 = __importDefault(require("../models/bet"));
+const match_athlete_1 = __importDefault(require("../models/match-athlete"));
+const athlete_1 = __importDefault(require("../models/athlete"));
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const email = body.email;
@@ -101,4 +105,71 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
 });
-exports.default = { signup, login };
+const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const params = req.params;
+    try {
+        console.log(params.userId);
+        const user = yield user_1.default.findOne({
+            where: {
+                id: params.userId
+            }
+        });
+        if (!user) {
+            return res.status(500).json({
+                message: "Could not find user with that ID."
+            });
+        }
+        ;
+        const bets = yield bet_1.default.findAll({
+            where: {
+                userId: user.id
+            },
+            include: [{
+                    model: match_athlete_1.default,
+                    include: [{
+                            model: athlete_1.default
+                        }]
+                }],
+            order: database_1.default.col('id')
+        });
+        return res.status(200).json({
+            message: "Successfully found user",
+            user: {
+                id: user.id,
+                balance: user.balance,
+                username: user.username,
+                bets: bets.reverse()
+            }
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Failed to find user with that ID.",
+            error: error
+        });
+    }
+});
+const richestUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const topUsers = yield user_1.default.findAll({
+            order: database_1.default.col('balance'),
+            limit: 10
+        });
+        if (!topUsers) {
+            return res.status(500).json({
+                message: "Unable to fetch top users."
+            });
+        }
+        return res.status(200).json({
+            message: "Successfully fetched top users",
+            topUsers: topUsers.reverse()
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Failed to fetch top users",
+            error: error
+        });
+    }
+});
+exports.default = { signup, login, richestUsers, getUser };

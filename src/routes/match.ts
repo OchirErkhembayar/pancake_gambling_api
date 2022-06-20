@@ -1,6 +1,7 @@
 import { match } from "assert";
 import express from "express";
 import { body } from "express-validator";
+import { authUser } from "../middleware/is-auth";
 
 import matchController from "../controllers/match";
 
@@ -12,10 +13,10 @@ router.get('/upcoming-matches', matchController.getUpcomingMatches);
 
 router.get('/:matchId', matchController.getMatch);
 
-router.post('/new-match', matchController.createMatch);
+router.post('/new-match', authUser, matchController.createMatch);
 
-router.patch('/result/', matchController.matchResult);
+router.patch('/result/', authUser, matchController.matchResult);
 
-router.delete('/delete/:matchId', matchController.deleteMatch);
+router.delete('/delete/:matchId', authUser, matchController.deleteMatch);
 
 export default router;

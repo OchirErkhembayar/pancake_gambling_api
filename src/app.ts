@@ -14,7 +14,6 @@ import Athlete from "./models/athlete";
 import User from "./models/user";
 import MatchAthlete from "./models/match-athlete";
 import Bet from "./models/bet";
-import bet from "./controllers/bet";
 
 const app = express();
 

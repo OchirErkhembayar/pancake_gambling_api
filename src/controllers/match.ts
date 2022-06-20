@@ -9,6 +9,7 @@ import User from "../models/user";
 import Match from "../models/match";
 import MatchAthlete from "../models/match-athlete";
 import athlete from "./athlete";
+import sequelize from "../util/database";
 
 type RequestBody = {
   title: string;
@@ -34,7 +35,11 @@ type RequestParams = {
 
 const getMatches = async (req: Request, res: Response) => {
   try {
-    const matches = await Match.findAll();
+    const matches = await Match.findAll({
+      include: [{
+        all: true
+      }]
+    });
     if (!matches) {
       return res.status(500).json({
         message: "Failed to fetch matches."
@@ -59,8 +64,13 @@ const getUpcomingMatches = async (req: Request, res: Response) => {
       where: {
         date: {
           [Op.gte]: date
-        }
-      }
+        },
+        completed: false
+      },
+      include: [{
+        all: true
+      }],
+      order: sequelize.col('date')
     });
     if (!matches) {
       return res.status(500).json({
@@ -111,8 +121,25 @@ const getMatch = async (req: Request, res: Response) => {
   }
 }
 
-const createMatch = async (req: Request, res: Response) => {
+// Change req type back to Request when possible
+const createMatch = async (req: any, res: Response) => {
   const body = req.body as RequestBody;
+  const user = await User.findOne({
+    where: {
+      id: req.userId
+    }
+  });
+  if (!user) {
+    return res.status(500).json({
+      message: "Could not find user."
+    });
+  }
+  if (user.admin === false) {
+    return res.status(401).json({
+      message: "You are not authorized.",
+      user: user
+    });
+  }
   try {
     const match = await Match.create({
       title: body.title,
@@ -120,7 +147,8 @@ const createMatch = async (req: Request, res: Response) => {
       country: body.country ? body.country : null,
       city: body.city ? body.city : null,
       date: body.date ? body.date : null,
-      weightLimit: body.weightLimit ? body.weightLimit : null
+      weightLimit: body.weightLimit ? body.weightLimit : null,
+      completed: false
     });
     if (!match) {
       return res.status(500).json({
@@ -173,8 +201,24 @@ const createMatch = async (req: Request, res: Response) => {
   }
 }
 
-const matchResult = async (req: Request, res: Response) => {
+const matchResult = async (req: any, res: Response) => {
   const body = req.body as RequestBody;
+  const user = await User.findOne({
+    where: {
+      id: req.userId
+    }
+  });
+  if (!user) {
+    return res.status(500).json({
+      message: "Could not find user."
+    });
+  }
+  if (user.admin === false) {
+    return res.status(401).json({
+      message: "You are not authorized.",
+      user: user
+    });
+  }
   try {
     const winner = await MatchAthlete.findByPk(
       body.winnerId,
@@ -190,6 +234,18 @@ const matchResult = async (req: Request, res: Response) => {
         message: "This result of this match has already been decided."
       });
     }
+    const match = await Match.findOne({
+      where: {
+        id: winner.matchId
+      }
+    });
+    if (!match) {
+      return res.status(500).json({
+        message: "Could not find match."
+      });
+    }
+    match.completed = true;
+    await match.save();
     const loser = await MatchAthlete.findByPk(
       body.loserId,
       { include: Athlete }
@@ -270,8 +326,24 @@ const matchResult = async (req: Request, res: Response) => {
   }
 }
 
-const deleteMatch = async (req: Request, res: Response) => {
+const deleteMatch = async (req: any, res: Response) => {
   const params = req.params as RequestParams;
+  const user = await User.findOne({
+    where: {
+      id: req.userId
+    }
+  });
+  if (!user) {
+    return res.status(500).json({
+      message: "Could not find user."
+    });
+  }
+  if (user.admin === false) {
+    return res.status(401).json({
+      message: "You are not authorized.",
+      user: user
+    });
+  }
   try {
     const resultTwo = await MatchAthlete.destroy({
       where: {

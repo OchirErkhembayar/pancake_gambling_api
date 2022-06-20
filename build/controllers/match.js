@@ -18,9 +18,14 @@ const bet_1 = __importDefault(require("../models/bet"));
 const user_1 = __importDefault(require("../models/user"));
 const match_1 = __importDefault(require("../models/match"));
 const match_athlete_1 = __importDefault(require("../models/match-athlete"));
+const database_1 = __importDefault(require("../util/database"));
 const getMatches = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const matches = yield match_1.default.findAll();
+        const matches = yield match_1.default.findAll({
+            include: [{
+                    all: true
+                }]
+        });
         if (!matches) {
             return res.status(500).json({
                 message: "Failed to fetch matches."
@@ -45,8 +50,13 @@ const getUpcomingMatches = (req, res) => __awaiter(void 0, void 0, void 0, funct
             where: {
                 date: {
                     [sequelize_1.Op.gte]: date
-                }
-            }
+                },
+                completed: false
+            },
+            include: [{
+                    all: true
+                }],
+            order: database_1.default.col('date')
         });
         if (!matches) {
             return res.status(500).json({
@@ -97,8 +107,25 @@ const getMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
 });
+// Change req type back to Request when possible
 const createMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
+    const user = yield user_1.default.findOne({
+        where: {
+            id: req.userId
+        }
+    });
+    if (!user) {
+        return res.status(500).json({
+            message: "Could not find user."
+        });
+    }
+    if (user.admin === false) {
+        return res.status(401).json({
+            message: "You are not authorized.",
+            user: user
+        });
+    }
     try {
         const match = yield match_1.default.create({
             title: body.title,
@@ -106,7 +133,8 @@ const createMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             country: body.country ? body.country : null,
             city: body.city ? body.city : null,
             date: body.date ? body.date : null,
-            weightLimit: body.weightLimit ? body.weightLimit : null
+            weightLimit: body.weightLimit ? body.weightLimit : null,
+            completed: false
         });
         if (!match) {
             return res.status(500).json({
@@ -161,6 +189,22 @@ const createMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 const matchResult = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
+    const user = yield user_1.default.findOne({
+        where: {
+            id: req.userId
+        }
+    });
+    if (!user) {
+        return res.status(500).json({
+            message: "Could not find user."
+        });
+    }
+    if (user.admin === false) {
+        return res.status(401).json({
+            message: "You are not authorized.",
+            user: user
+        });
+    }
     try {
         const winner = yield match_athlete_1.default.findByPk(body.winnerId, { include: athlete_1.default });
         if (!winner) {
@@ -173,6 +217,18 @@ const matchResult = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 message: "This result of this match has already been decided."
             });
         }
+        const match = yield match_1.default.findOne({
+            where: {
+                id: winner.matchId
+            }
+        });
+        if (!match) {
+            return res.status(500).json({
+                message: "Could not find match."
+            });
+        }
+        match.completed = true;
+        yield match.save();
         const loser = yield match_athlete_1.default.findByPk(body.loserId, { include: athlete_1.default });
         if (!loser) {
             return res.status(500).json({
@@ -251,6 +307,22 @@ const matchResult = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 const deleteMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const params = req.params;
+    const user = yield user_1.default.findOne({
+        where: {
+            id: req.userId
+        }
+    });
+    if (!user) {
+        return res.status(500).json({
+            message: "Could not find user."
+        });
+    }
+    if (user.admin === false) {
+        return res.status(401).json({
+            message: "You are not authorized.",
+            user: user
+        });
+    }
     try {
         const resultTwo = yield match_athlete_1.default.destroy({
             where: {
@@ -277,6 +349,10 @@ const deleteMatch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     catch (error) {
+        return res.status(500).json({
+            message: "Failed to delete match.",
+            error: error
+        });
     }
 });
 exports.default = { getMatches, getUpcomingMatches, getMatch, createMatch, matchResult, deleteMatch };

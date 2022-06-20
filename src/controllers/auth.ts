@@ -5,6 +5,11 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 
 import User from "../models/user";
+import sequelize from "../util/database";
+import Bet from "../models/bet";
+import MatchAthlete from "../models/match-athlete";
+import Athlete from "../models/athlete";
+import Match from "../models/match";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -17,6 +22,10 @@ type RequestBody = {
   username: string;
   confirmedPassword?: string;
   token?: string;
+}
+
+type RequestParams = {
+  userId: string;
 }
 
 const signup = async (req: Request, res: Response) => {
@@ -105,4 +114,70 @@ const login = async (req: Request, res: Response) => {
   }
 }
 
-export default { signup, login }
+const getUser = async (req: Request, res: Response) => {
+  const params = req.params as RequestParams;
+  try {
+    console.log(params.userId);
+    const user = await User.findOne({
+      where: {
+        id: params.userId
+      }
+    });
+    if (!user) {
+      return res.status(500).json({
+        message: "Could not find user with that ID."
+      })
+    };
+    const bets = await Bet.findAll({
+      where: {
+        userId: user.id
+      },
+      include: [{
+        model: MatchAthlete,
+        include: [{
+          model: Athlete
+        }]
+      }],
+      order: sequelize.col('id')
+    });
+    return res.status(200).json({
+      message: "Successfully found user",
+      user: {
+        id: user.id,
+        balance: user.balance,
+        username: user.username,
+        bets: bets.reverse()
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to find user with that ID.",
+      error: error
+    })
+  }
+}
+
+const richestUsers = async (req: Request, res: Response) => {
+  try {
+    const topUsers = await User.findAll({
+      order: sequelize.col('balance'),
+      limit: 10
+    });
+    if (!topUsers) {
+      return res.status(500).json({
+        message: "Unable to fetch top users."
+      });
+    }
+    return res.status(200).json({
+      message: "Successfully fetched top users",
+      topUsers: topUsers.reverse()
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch top users",
+      error: error
+    });
+  }
+}
+
+export default { signup, login, richestUsers, getUser }

@@ -188,12 +188,29 @@ const createBet = async (req: Request, res: Response) => {
         message: "Failed to create bet"
       });
     }
+    let betDetails = await Bet.findOne({
+      where: {
+        id: bet.id
+      },
+      include: [{
+        model: MatchAthlete,
+        include: [{
+          model: Athlete
+        }]
+      }]
+    });
+    if (!betDetails) {
+      return res.status(500).json({
+        message: "Bet created. Failed to fetch bet details",
+        bet: bet,
+        matchAthlete: matchAthlete
+      });
+    }
     user.balance -= bet.amount;
     await user.save();
     return res.status(200).json({
       message: "Successfully created bet",
-      bet: bet,
-      matchAthlete: matchAthlete
+      bet: betDetails
     })
   } catch (error) {
     return res.status(500).json({

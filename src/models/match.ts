@@ -10,6 +10,7 @@ interface IMatch extends Sequelize.Model {
   city: string;
   date: Date;
   weightLimit: number;
+  completed: boolean;
 }
 
 const Match = sequelize.define<IMatch>('match', {
@@ -41,6 +42,11 @@ const Match = sequelize.define<IMatch>('match', {
   },
   weightLimit: {
     type: Sequelize.INTEGER,
+    allowNull: true
+  },
+  completed: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
     allowNull: true
   }
 }, { timestamps: true });
