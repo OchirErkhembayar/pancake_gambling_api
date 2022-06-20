@@ -56,7 +56,7 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             username: username,
             password: hashedPw,
             admin: false,
-            balance: 1000
+            balance: 10000
         });
         res.status(201).json({
             message: "User created.",
