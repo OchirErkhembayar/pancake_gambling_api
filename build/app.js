@@ -5,7 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
+const helmet_1 = __importDefault(require("helmet"));
+const compression_1 = __importDefault(require("compression"));
+const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const athlete_1 = __importDefault(require("./routes/athlete"));
 const match_1 = __importDefault(require("./routes/match"));
@@ -17,6 +22,10 @@ const user_1 = __importDefault(require("./models/user"));
 const match_athlete_1 = __importDefault(require("./models/match-athlete"));
 const bet_2 = __importDefault(require("./models/bet"));
 const app = (0, express_1.default)();
+const accessLogStream = fs_1.default.createWriteStream(path_1.default.join(__dirname, 'access.log'), { flags: 'a' });
+app.use((0, helmet_1.default)());
+app.use((0, compression_1.default)());
+app.use((0, morgan_1.default)('combined', { stream: accessLogStream }));
 app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
 app.use('/auth', auth_1.default);
@@ -34,7 +43,7 @@ match_athlete_1.default.belongsTo(athlete_2.default, { onDelete: 'cascade' });
 database_1.default
     .sync()
     .then(result => {
-    app.listen(8000);
+    app.listen(process.env.PORT || 8000);
 })
     .catch(err => {
     console.log(err, `${process.env.DB_NAME}`);

@@ -1,5 +1,8 @@
 import express from "express";
 import bodyParser from "body-parser";
+import helmet from "helmet";
+import compression from "compression";
+import morgan from "morgan";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
@@ -16,6 +19,15 @@ import MatchAthlete from "./models/match-athlete";
 import Bet from "./models/bet";
 
 const app = express();
+
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, 'access.log'),
+  { flags: 'a' }
+)
+
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -37,7 +49,7 @@ MatchAthlete.belongsTo(Athlete, {onDelete: 'cascade'})
 sequelize
   .sync()
   .then(result => {
-    app.listen(8000);
+    app.listen(process.env.PORT || 8000);
   })
   .catch(err => {
     console.log(err, `${process.env.DB_NAME}`)
