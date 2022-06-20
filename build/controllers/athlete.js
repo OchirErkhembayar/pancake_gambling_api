@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_validator_1 = require("express-validator");
 const athlete_1 = __importDefault(require("../models/athlete"));
+const user_1 = __importDefault(require("../models/user"));
 const getAthletes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const athletes = yield athlete_1.default.findAll();
@@ -58,6 +59,22 @@ const getAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 const createAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_1.default.findOne({
+        where: {
+            id: req.userId
+        }
+    });
+    if (!user) {
+        return res.status(500).json({
+            message: "Could not find user."
+        });
+    }
+    if (user.admin === false) {
+        return res.status(401).json({
+            message: "You are not authorized.",
+            user: user
+        });
+    }
     const body = req.body;
     const wins = body.wins;
     const losses = body.losses;
@@ -93,6 +110,22 @@ const createAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 const updateAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_1.default.findOne({
+        where: {
+            id: req.userId
+        }
+    });
+    if (!user) {
+        return res.status(500).json({
+            message: "Could not find user."
+        });
+    }
+    if (user.admin === false) {
+        return res.status(401).json({
+            message: "You are not authorized.",
+            user: user
+        });
+    }
     const body = req.body;
     const params = req.params;
     try {
@@ -137,6 +170,22 @@ const updateAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 const deleteAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_1.default.findOne({
+        where: {
+            id: req.userId
+        }
+    });
+    if (!user) {
+        return res.status(500).json({
+            message: "Could not find user."
+        });
+    }
+    if (user.admin === false) {
+        return res.status(401).json({
+            message: "You are not authorized.",
+            user: user
+        });
+    }
     const params = req.params;
     try {
         const result = yield athlete_1.default.destroy({

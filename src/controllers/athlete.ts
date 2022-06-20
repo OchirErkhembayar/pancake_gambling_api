@@ -2,6 +2,7 @@ import { Request, Response, NextFunction} from "express";
 import { validationResult } from "express-validator";
 
 import Athlete from "../models/athlete";
+import User from "../models/user";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -65,7 +66,23 @@ const getAthlete = async (req: Request, res: Response) => {
   }
 }
 
-const createAthlete = async (req: Request, res: Response) => {
+const createAthlete = async (req: any, res: Response) => {
+  const user = await User.findOne({
+    where: {
+      id: req.userId
+    }
+  });
+  if (!user) {
+    return res.status(500).json({
+      message: "Could not find user."
+    });
+  }
+  if (user.admin === false) {
+    return res.status(401).json({
+      message: "You are not authorized.",
+      user: user
+    });
+  }
   const body = req.body as RequestBody;
   const wins = body.wins;
   const losses = body.losses;
@@ -100,7 +117,23 @@ const createAthlete = async (req: Request, res: Response) => {
   }
 }
 
-const updateAthlete = async (req: Request, res: Response) => {
+const updateAthlete = async (req: any, res: Response) => {
+  const user = await User.findOne({
+    where: {
+      id: req.userId
+    }
+  });
+  if (!user) {
+    return res.status(500).json({
+      message: "Could not find user."
+    });
+  }
+  if (user.admin === false) {
+    return res.status(401).json({
+      message: "You are not authorized.",
+      user: user
+    });
+  }
   const body = req.body as RequestBody;
   const params = req.params as RequestParams;
   try {
@@ -144,7 +177,23 @@ const updateAthlete = async (req: Request, res: Response) => {
   }
 }
 
-const deleteAthlete = async (req: Request, res: Response) => {
+const deleteAthlete = async (req: any, res: Response) => {
+  const user = await User.findOne({
+    where: {
+      id: req.userId
+    }
+  });
+  if (!user) {
+    return res.status(500).json({
+      message: "Could not find user."
+    });
+  }
+  if (user.admin === false) {
+    return res.status(401).json({
+      message: "You are not authorized.",
+      user: user
+    });
+  }
   const params = req.params as RequestParams;
   try {
     const result = await Athlete.destroy({
