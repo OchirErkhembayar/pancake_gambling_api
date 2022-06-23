@@ -12,11 +12,10 @@ const router = express_1.default.Router();
 router.post('/signup', [
     (0, express_validator_1.body)('username')
         .trim()
-        .isLength({ min: 5 })
         .custom((value) => {
         return user_1.default.findOne({
             where: {
-                email: value
+                username: value
             }
         })
             .then(userDoc => {

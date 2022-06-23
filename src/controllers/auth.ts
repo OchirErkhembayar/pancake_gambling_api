@@ -10,6 +10,7 @@ import Bet from "../models/bet";
 import MatchAthlete from "../models/match-athlete";
 import Athlete from "../models/athlete";
 import Match from "../models/match";
+import { token } from "morgan";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -40,7 +41,7 @@ const signup = async (req: Request, res: Response) => {
     error.statusCode = 422;
     error.data = errors.array();
     return res.status(422).json({
-      message: "Validation failed",
+      message: error.data[0].msg,
       error: error
     })
   }
@@ -55,7 +56,8 @@ const signup = async (req: Request, res: Response) => {
         location: "body"
       }];
       return res.status(422).json({
-        error: error
+        error: error,
+        message: error.data[0].msg
       })
     }
     const hashedPw = await bcrypt.hash(password, 12);
@@ -66,9 +68,15 @@ const signup = async (req: Request, res: Response) => {
       admin: false,
       balance: 10000
     });
+    const token = jwt.sign({
+      email: user.email,
+      userId: user.id
+    }, `${process.env.JWT_PW}`,
+    { expiresIn: '1h' });
     res.status(201).json({
       message: "User created.",
-      user: user
+      token: token,
+      userId: user.id
     })
   } catch (error) {
     res.status(500).json({

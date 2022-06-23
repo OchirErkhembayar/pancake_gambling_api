@@ -32,7 +32,7 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         error.statusCode = 422;
         error.data = errors.array();
         return res.status(422).json({
-            message: "Validation failed",
+            message: error.data[0].msg,
             error: error
         });
     }
@@ -47,7 +47,8 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     location: "body"
                 }];
             return res.status(422).json({
-                error: error
+                error: error,
+                message: error.data[0].msg
             });
         }
         const hashedPw = yield bcrypt_1.default.hash(password, 12);
@@ -58,9 +59,14 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             admin: false,
             balance: 10000
         });
+        const token = jsonwebtoken_1.default.sign({
+            email: user.email,
+            userId: user.id
+        }, `${process.env.JWT_PW}`, { expiresIn: '1h' });
         res.status(201).json({
             message: "User created.",
-            user: user
+            token: token,
+            userId: user.id
         });
     }
     catch (error) {

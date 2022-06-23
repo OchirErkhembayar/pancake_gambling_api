@@ -11,11 +11,10 @@ router.post('/signup',
   [
     body('username')
       .trim()
-      .isLength({ min: 5 })
       .custom((value) => {
         return User.findOne({
           where: {
-            email: value
+            username: value
           }
         })
           .then(userDoc => {
