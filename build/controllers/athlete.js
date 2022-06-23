@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_validator_1 = require("express-validator");
 const athlete_1 = __importDefault(require("../models/athlete"));
 const user_1 = __importDefault(require("../models/user"));
+const match_athlete_1 = __importDefault(require("../models/match-athlete"));
+const match_1 = __importDefault(require("../models/match"));
 const getAthletes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const athletes = yield athlete_1.default.findAll();
@@ -46,9 +48,26 @@ const getAthlete = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 id: params.athleteId
             });
         }
+        const matches = yield match_athlete_1.default.findAll({
+            where: {
+                athleteId: athlete.id
+            },
+            include: [{
+                    model: match_1.default,
+                    include: [{
+                            all: true
+                        }]
+                }]
+        });
+        if (!matches) {
+            return res.status(500).json({
+                message: "Could not find match history."
+            });
+        }
         return res.status(200).json({
             message: "Successfully fetched athlete.",
-            athlete: athlete
+            athlete: athlete,
+            matches: matches
         });
     }
     catch (error) {

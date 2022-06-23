@@ -3,6 +3,8 @@ import { validationResult } from "express-validator";
 
 import Athlete from "../models/athlete";
 import User from "../models/user";
+import MatchAthlete from "../models/match-athlete";
+import Match from "../models/match";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -54,9 +56,26 @@ const getAthlete = async (req: Request, res: Response) => {
         id: params.athleteId
       });
     }
+    const matches = await MatchAthlete.findAll({
+      where: {
+        athleteId: athlete.id
+      },
+      include: [{
+        model: Match,
+        include: [{
+          all: true
+        }]
+      }]
+    });
+    if (!matches) {
+      return res.status(500).json({
+        message: "Could not find match history."
+      });
+    }
     return res.status(200).json({
       message: "Successfully fetched athlete.",
-      athlete: athlete
+      athlete: athlete,
+      matches: matches
     })
   } catch (error) {
     res.status(404).json({
