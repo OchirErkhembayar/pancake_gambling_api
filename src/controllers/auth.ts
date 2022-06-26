@@ -178,7 +178,12 @@ const richestUsers = async (req: Request, res: Response) => {
     }
     return res.status(200).json({
       message: "Successfully fetched top users",
-      topUsers: topUsers
+      topUsers: topUsers.map(user => {
+        return {
+          username: user.username,
+          balance: user.balance
+        }
+      })
     });
   } catch (error) {
     return res.status(500).json({

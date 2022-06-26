@@ -168,7 +168,12 @@ const richestUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         return res.status(200).json({
             message: "Successfully fetched top users",
-            topUsers: topUsers
+            topUsers: topUsers.map(user => {
+                return {
+                    username: user.username,
+                    balance: user.balance
+                };
+            })
         });
     }
     catch (error) {
