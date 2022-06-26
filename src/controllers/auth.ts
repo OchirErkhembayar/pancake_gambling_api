@@ -168,7 +168,7 @@ const getUser = async (req: Request, res: Response) => {
 const richestUsers = async (req: Request, res: Response) => {
   try {
     const topUsers = await User.findAll({
-      order: sequelize.col('balance'),
+      order: [['balance', 'DESC']],
       limit: 10
     });
     if (!topUsers) {
@@ -178,7 +178,7 @@ const richestUsers = async (req: Request, res: Response) => {
     }
     return res.status(200).json({
       message: "Successfully fetched top users",
-      topUsers: topUsers.reverse()
+      topUsers: topUsers
     });
   } catch (error) {
     return res.status(500).json({

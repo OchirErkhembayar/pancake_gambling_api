@@ -158,7 +158,7 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 const richestUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const topUsers = yield user_1.default.findAll({
-            order: database_1.default.col('balance'),
+            order: [['balance', 'DESC']],
             limit: 10
         });
         if (!topUsers) {
@@ -168,7 +168,7 @@ const richestUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         return res.status(200).json({
             message: "Successfully fetched top users",
-            topUsers: topUsers.reverse()
+            topUsers: topUsers
         });
     }
     catch (error) {
