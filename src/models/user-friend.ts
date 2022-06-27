@@ -3,6 +3,7 @@ import Sequelize from "sequelize";
 import sequelize from "../util/database";
 
 interface IUserFriend extends Sequelize.Model {
+  id: number;
   friendshipId: number;
   userId: number;
   accepted: boolean;

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction} from "express";
+import { Op } from "sequelize";
 
 import User from "../models/user";
 import UserFriend from "../models/user-friend";
@@ -33,18 +34,34 @@ const getFriends = async (req: any, res: Response) => {
           message: "Failed to fetch friendship."
         });
       }
-      const userFriendsArray = await UserFriend.findAll({
+      const userFriend = await UserFriend.findOne({
         where: {
-          friendshipId: friendship.id
+          friendshipId: friendship.id,
+          userId: {
+            [Op.not]: req.userId
+          }
         }
       });
-      if (!userFriendsArray || userFriendsArray.length < 2) {
+      if (!userFriend) {
         return res.status(500).json({
-          message: "Failed to find userfriends."
+          message: "Failed to find userfriend."
         });
       }
-      const singleUserFriend = userFriendsArray.find(uf => uf.userId !== req.userId);
-      friendships.push(singleUserFriend);
+      const friend = await User.findOne({
+        where: {
+          id: userFriend.userId
+        },
+        attributes: ['username']
+      });
+      if (!friend) {
+        return res.status(500).json({
+          message: "Failed to find friend."
+        });
+      }
+      friendships.push({
+        userFriend: userFriend,
+        friend: friend
+      });
     }
     return res.status(200).json({
       message: "Successfully fetched friends.",
@@ -59,7 +76,9 @@ const getFriends = async (req: any, res: Response) => {
 
 const getUsers = async (req: any, res: Response) => {
   try {
-    const users = await User.findAll({})
+    const users = await User.findAll({
+      attributes: ['username', 'id']
+    });
     if (!users) {
       return res.status(500).json({
         message: "Failed to fetch users"
@@ -68,7 +87,7 @@ const getUsers = async (req: any, res: Response) => {
     const filteredUsers = users.filter(user => user.id !== req.userId);
     return res.status(200).json({
       message: "Successfully fetched users",
-      users: users
+      users: filteredUsers
     });
   } catch (error) {
     return res.status(500).json({
@@ -82,6 +101,7 @@ const sendFriendRequest = async (req: any, res: Response) => {
   const body = req.body as RequestBody;
   try {
     const friend = await User.findByPk(req.userId);
+
     if (!friend) {
       return res.status(500).json({
         message: "Failed to find friend."
@@ -163,34 +183,44 @@ const acceptFriendRequest = async (req: any, res: Response) => {
   }
 }
 
-const deleteFriendRequest = async (req: Request, res: Response) => {
+const deleteFriendRequest = async (req: any, res: Response) => {
   const body = req.body as RequestBody;
   try {
-    const friendship = await Friendship.findOne({
+    const userFriend = await UserFriend.findOne({
       where: {
         id: body.userFriendId
       }
     });
-    if (!friendship) {
+    if (!userFriend) {
       return res.status(500).json({
-        message: "Failed to find friendship."
+        message: "Failed to find userFriend."
       });
     }
-    const friendRequests = await UserFriend.findAll({
+    const friendship = await Friendship.findOne({
+      where: {
+        id: userFriend.friendshipId
+      }
+    });
+    if (!friendship) {
+      return res.status(500).json({
+        message: "Could not find friendship."
+      });
+    }
+    const invites = await UserFriend.findAll({
       where: {
         friendshipId: friendship.id
       }
     });
-    if (!friendRequests || friendRequests.length < 2) {
+    if (!invites) {
       return res.status(500).json({
-        message: "Failed to find friend requests."
-      })
+        message: "Failed to find friend request."
+      });
     }
-    for (let i = 0; i < friendRequests.length; i++) {
-      await friendRequests[i].destroy();
+    for (let i = 0; i < invites.length; i++) {
+      await invites[i].destroy();
     }
     return res.status(500).json({
-      message: "Deleted friend requests"
+      message: "Deleted friend request"
     });
   } catch (error) {
     return res.status(500).json({

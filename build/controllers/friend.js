@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const sequelize_1 = require("sequelize");
 const user_1 = __importDefault(require("../models/user"));
 const user_friend_1 = __importDefault(require("../models/user-friend"));
 const friendship_1 = __importDefault(require("../models/friendship"));
@@ -39,18 +40,34 @@ const getFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                     message: "Failed to fetch friendship."
                 });
             }
-            const userFriendsArray = yield user_friend_1.default.findAll({
+            const userFriend = yield user_friend_1.default.findOne({
                 where: {
-                    friendshipId: friendship.id
+                    friendshipId: friendship.id,
+                    userId: {
+                        [sequelize_1.Op.not]: req.userId
+                    }
                 }
             });
-            if (!userFriendsArray || userFriendsArray.length < 2) {
+            if (!userFriend) {
                 return res.status(500).json({
-                    message: "Failed to find userfriends."
+                    message: "Failed to find userfriend."
                 });
             }
-            const singleUserFriend = userFriendsArray.find(uf => uf.userId !== req.userId);
-            friendships.push(singleUserFriend);
+            const friend = yield user_1.default.findOne({
+                where: {
+                    id: userFriend.userId
+                },
+                attributes: ['username']
+            });
+            if (!friend) {
+                return res.status(500).json({
+                    message: "Failed to find friend."
+                });
+            }
+            friendships.push({
+                userFriend: userFriend,
+                friend: friend
+            });
         }
         return res.status(200).json({
             message: "Successfully fetched friends.",
@@ -65,7 +82,9 @@ const getFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const users = yield user_1.default.findAll({});
+        const users = yield user_1.default.findAll({
+            attributes: ['username', 'id']
+        });
         if (!users) {
             return res.status(500).json({
                 message: "Failed to fetch users"
@@ -74,7 +93,7 @@ const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const filteredUsers = users.filter(user => user.id !== req.userId);
         return res.status(200).json({
             message: "Successfully fetched users",
-            users: users
+            users: filteredUsers
         });
     }
     catch (error) {
@@ -172,31 +191,41 @@ const acceptFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
 const deleteFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     try {
-        const friendship = yield friendship_1.default.findOne({
+        const userFriend = yield user_friend_1.default.findOne({
             where: {
                 id: body.userFriendId
             }
         });
-        if (!friendship) {
+        if (!userFriend) {
             return res.status(500).json({
-                message: "Failed to find friendship."
+                message: "Failed to find userFriend."
             });
         }
-        const friendRequests = yield user_friend_1.default.findAll({
+        const friendship = yield friendship_1.default.findOne({
+            where: {
+                id: userFriend.friendshipId
+            }
+        });
+        if (!friendship) {
+            return res.status(500).json({
+                message: "Could not find friendship."
+            });
+        }
+        const invites = yield user_friend_1.default.findAll({
             where: {
                 friendshipId: friendship.id
             }
         });
-        if (!friendRequests || friendRequests.length < 2) {
+        if (!invites) {
             return res.status(500).json({
-                message: "Failed to find friend requests."
+                message: "Failed to find friend request."
             });
         }
-        for (let i = 0; i < friendRequests.length; i++) {
-            yield friendRequests[i].destroy();
+        for (let i = 0; i < invites.length; i++) {
+            yield invites[i].destroy();
         }
         return res.status(500).json({
-            message: "Deleted friend requests"
+            message: "Deleted friend request"
         });
     }
     catch (error) {

@@ -13,6 +13,6 @@ router.post('/send-request', authUser, friendController.sendFriendRequest);
 
 router.patch('/accept', authUser, friendController.acceptFriendRequest);
 
-router.delete('/delete', authUser, friendController.deleteFriendRequest);
+router.delete('/decline', authUser, friendController.deleteFriendRequest);
 
 export default router;

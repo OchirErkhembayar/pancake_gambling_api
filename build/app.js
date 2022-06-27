@@ -39,6 +39,8 @@ app.use('/friend', friend_1.default);
 user_1.default.hasMany(bet_2.default, { onDelete: 'cascade' });
 friendship_1.default.belongsToMany(user_1.default, { through: user_friend_1.default });
 user_1.default.hasMany(friendship_1.default, { onDelete: 'cascade' });
+user_friend_1.default.hasOne(user_1.default);
+user_1.default.belongsTo(user_friend_1.default);
 bet_2.default.belongsTo(user_1.default);
 bet_2.default.belongsTo(match_athlete_1.default, { onDelete: 'cascade' });
 match_athlete_1.default.hasMany(bet_2.default);
