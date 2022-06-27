@@ -7,6 +7,7 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 
+import friendRoutes from "./routes/friend";
 import authRoutes from "./routes/auth";
 import athleteRoutes from "./routes/athlete";
 import matchRoutes from "./routes/match";
@@ -14,6 +15,8 @@ import betRoutes from "./routes/bet";
 import sequelize from "./util/database";
 import Match from "./models/match";
 import Athlete from "./models/athlete";
+import Friendship from "./models/friendship";
+import UserFriend from "./models/user-friend";
 import User from "./models/user";
 import MatchAthlete from "./models/match-athlete";
 import Bet from "./models/bet";
@@ -36,8 +39,11 @@ app.use('/auth', authRoutes);
 app.use('/athlete', athleteRoutes);
 app.use('/match', matchRoutes);
 app.use('/bet', betRoutes);
+app.use('/friend', friendRoutes);
 
 User.hasMany(Bet, { onDelete: 'cascade' });
+Friendship.belongsToMany(User, { through: UserFriend });
+User.hasMany(Friendship, { onDelete: 'cascade' });
 Bet.belongsTo(User);
 Bet.belongsTo(MatchAthlete, { onDelete: 'cascade' });
 MatchAthlete.hasMany(Bet);
