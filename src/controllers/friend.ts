@@ -270,8 +270,9 @@ const deleteFriendRequest = async (req: any, res: Response) => {
     for (let i = 0; i < invites.length; i++) {
       await invites[i].destroy();
     }
-    return res.status(500).json({
-      message: "Deleted friend request"
+    return res.status(200).json({
+      message: "Deleted friend request",
+      friend: userFriend
     });
   } catch (error) {
     return res.status(500).json({
@@ -280,4 +281,57 @@ const deleteFriendRequest = async (req: any, res: Response) => {
   }
 }
 
-export default { getFriends, sendFriendRequest, acceptFriendRequest, deleteFriendRequest, getUsers };
+const deleteFriend = async (req: any, res: Response) => {
+  const body = req.body as RequestBody;
+  try {
+    const userFriend = await UserFriend.findOne({
+      where: {
+        id: body.userFriendId
+      },
+      include: [{
+        model: User,
+        attributes: ['username']
+      }]
+    });
+    if (!userFriend) {
+      return res.status(500).json({
+        message: "Could not find userfriend"
+      });
+    }
+    const friendship = await Friendship.findOne({
+      where: {
+        id: userFriend.friendshipId
+      }
+    });
+    if (!friendship) {
+      return res.status(500).json({
+        message: "Failed to find friendship"
+      });
+    }
+    const myUserFriend = await UserFriend.findOne({
+      where: {
+        friendshipId: friendship.id,
+        userId: req.userId
+      }
+    });
+    if (!myUserFriend) {
+      return res.status(500).json({
+        message: "Failed to find my userfriend."
+      });
+    }
+    await myUserFriend.destroy();
+    await userFriend.destroy();
+    await friendship.destroy();
+    return res.status(200).json({
+      message: "Successfully deleted friend",
+      friend: userFriend
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to delete friend.",
+      error: error
+    })
+  }
+}
+
+export default { getFriends, sendFriendRequest, acceptFriendRequest, deleteFriendRequest, getUsers, deleteFriend };

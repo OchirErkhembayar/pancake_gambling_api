@@ -56,5 +56,5 @@ database_1.default
     app.listen(process.env.PORT || 8000);
 })
     .catch(err => {
-    console.log(err, `${process.env.DB_NAME}`);
+    console.log(err, `${process.env.DB_NAME}`, "SOMETHING WENT WRONG!!");
 });

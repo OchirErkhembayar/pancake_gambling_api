@@ -15,4 +15,6 @@ router.patch('/accept', authUser, friendController.acceptFriendRequest);
 
 router.delete('/decline', authUser, friendController.deleteFriendRequest);
 
+router.delete('/delete', authUser, friendController.deleteFriend);
+
 export default router;

@@ -273,8 +273,9 @@ const deleteFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
         for (let i = 0; i < invites.length; i++) {
             yield invites[i].destroy();
         }
-        return res.status(500).json({
-            message: "Deleted friend request"
+        return res.status(200).json({
+            message: "Deleted friend request",
+            friend: userFriend
         });
     }
     catch (error) {
@@ -283,4 +284,57 @@ const deleteFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
         });
     }
 });
-exports.default = { getFriends, sendFriendRequest, acceptFriendRequest, deleteFriendRequest, getUsers };
+const deleteFriend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const body = req.body;
+    try {
+        const userFriend = yield user_friend_1.default.findOne({
+            where: {
+                id: body.userFriendId
+            },
+            include: [{
+                    model: user_1.default,
+                    attributes: ['username']
+                }]
+        });
+        if (!userFriend) {
+            return res.status(500).json({
+                message: "Could not find userfriend"
+            });
+        }
+        const friendship = yield friendship_1.default.findOne({
+            where: {
+                id: userFriend.friendshipId
+            }
+        });
+        if (!friendship) {
+            return res.status(500).json({
+                message: "Failed to find friendship"
+            });
+        }
+        const myUserFriend = yield user_friend_1.default.findOne({
+            where: {
+                friendshipId: friendship.id,
+                userId: req.userId
+            }
+        });
+        if (!myUserFriend) {
+            return res.status(500).json({
+                message: "Failed to find my userfriend."
+            });
+        }
+        yield myUserFriend.destroy();
+        yield userFriend.destroy();
+        yield friendship.destroy();
+        return res.status(200).json({
+            message: "Successfully deleted friend",
+            friend: userFriend
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Failed to delete friend.",
+            error: error
+        });
+    }
+});
+exports.default = { getFriends, sendFriendRequest, acceptFriendRequest, deleteFriendRequest, getUsers, deleteFriend };
