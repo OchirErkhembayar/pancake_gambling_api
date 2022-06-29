@@ -8,6 +8,7 @@ import Friendship from "../models/friendship";
 type RequestBody = {
   friendId: number;
   userFriendId: number;
+  username: string;
 }
 
 const getFriends = async (req: any, res: Response) => {
@@ -75,8 +76,15 @@ const getFriends = async (req: any, res: Response) => {
 }
 
 const getUsers = async (req: any, res: Response) => {
+  const body = req.body as RequestBody;
+  console.log(body);
   try {
     const users = await User.findAll({
+      where: {
+        username: {
+          [Op.like]: `%${body.username}%`
+        }
+      },
       attributes: ['username', 'id']
     });
     if (!users) {
@@ -100,12 +108,46 @@ const getUsers = async (req: any, res: Response) => {
 const sendFriendRequest = async (req: any, res: Response) => {
   const body = req.body as RequestBody;
   try {
-    const friend = await User.findByPk(req.userId);
-
+    const friend = await User.findByPk(body.friendId);
     if (!friend) {
       return res.status(500).json({
         message: "Failed to find friend."
       });
+    }
+    const myUserFriends = await UserFriend.findAll({
+      where: {
+        userId: req.userId
+      }
+    });
+    if (!myUserFriends) {
+      return res.status(500).json({
+        message: "Failed to find current UserFriends to check if friend is already added."
+      });
+    }
+    const myFriends = await Promise.all(myUserFriends.map(async uf => {
+      return (
+        await UserFriend.findOne({
+          where: {
+            userId: {
+              [Op.not]: req.userId
+            },
+            friendshipId: uf.friendshipId
+          }
+        })
+      )
+    }));
+    if (!myFriends) {
+      return res.status(500).json({
+        message: "Failed to fetch my userfriends."
+      });
+    }
+    const friendIds = myFriends.map(f => {
+      return f?.userId
+    })
+    if (friendIds.includes(body.friendId)) {
+      return res.status(500).json({
+        message: "This person is already your friend."
+      })
     }
     const friendship = await Friendship.create();
     if (!friendship) {
@@ -135,9 +177,18 @@ const sendFriendRequest = async (req: any, res: Response) => {
         message: "Failed to create friend request"
       });
     }
+    const returnUserFriend = await UserFriend.findOne({
+      where: {
+        id: sendUserFriend.id
+      },
+      include: [{
+        model: User,
+        attributes: ['username']
+      }]
+    });
     return res.status(201).json({
       message: "Successfully created friend request",
-      friendRequest: sendUserFriend
+      friend: returnUserFriend
     });
   } catch (error) {
     return res.status(500).json({
@@ -171,7 +222,7 @@ const acceptFriendRequest = async (req: any, res: Response) => {
       await allUserFriends[i].save();
     }
     const otherUserFriend = allUserFriends.find(uf => uf.userId !== req.userId);
-    return res.status(500).json({
+    return res.status(200).json({
       message: "Friend request accepted",
       friend: otherUserFriend
     });

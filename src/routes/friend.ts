@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/all-friends', authUser, friendController.getFriends);
 
-router.get('/users', authUser, friendController.getUsers);
+router.post('/users', authUser, friendController.getUsers);
 
 router.post('/send-request', authUser, friendController.sendFriendRequest);
 

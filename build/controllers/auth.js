@@ -15,11 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_validator_1 = require("express-validator");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const sequelize_1 = require("sequelize");
 const user_1 = __importDefault(require("../models/user"));
 const database_1 = __importDefault(require("../util/database"));
 const bet_1 = __importDefault(require("../models/bet"));
 const match_athlete_1 = __importDefault(require("../models/match-athlete"));
 const athlete_1 = __importDefault(require("../models/athlete"));
+const user_friend_1 = __importDefault(require("../models/user-friend"));
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const email = body.email;
@@ -138,13 +140,43 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 }],
             order: database_1.default.col('id')
         });
+        const userFriends = yield user_friend_1.default.findAll({
+            where: {
+                userId: req.userId
+            }
+        });
+        if (!userFriends) {
+            return res.status(500).json({
+                message: "Failed to find userfriends."
+            });
+        }
+        const myUserFriends = yield Promise.all(userFriends.map((uf) => __awaiter(void 0, void 0, void 0, function* () {
+            return (yield user_friend_1.default.findOne({
+                where: {
+                    friendshipId: uf.friendshipId,
+                    userId: {
+                        [sequelize_1.Op.not]: req.userId
+                    }
+                },
+                include: [{
+                        model: user_1.default,
+                        attributes: ['username']
+                    }]
+            }));
+        })));
+        if (!myUserFriends) {
+            return res.status(500).json({
+                message: "Failed to fetch friends."
+            });
+        }
         return res.status(200).json({
             message: "Successfully found user",
             user: {
                 id: user.id,
                 balance: user.balance,
                 username: user.username,
-                bets: bets.reverse()
+                bets: bets.reverse(),
+                friends: myUserFriends
             }
         });
     }

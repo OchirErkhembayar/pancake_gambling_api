@@ -3,6 +3,7 @@ import { validationResult } from "express-validator";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { Op } from "sequelize";
 
 import User from "../models/user";
 import sequelize from "../util/database";
@@ -11,6 +12,7 @@ import MatchAthlete from "../models/match-athlete";
 import Athlete from "../models/athlete";
 import Match from "../models/match";
 import { token } from "morgan";
+import UserFriend from "../models/user-friend";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -122,7 +124,7 @@ const login = async (req: Request, res: Response) => {
   }
 }
 
-const getUser = async (req: Request, res: Response) => {
+const getUser = async (req: any, res: Response) => {
   const params = req.params as RequestParams;
   try {
     console.log(params.userId);
@@ -148,13 +150,45 @@ const getUser = async (req: Request, res: Response) => {
       }],
       order: sequelize.col('id')
     });
+    const userFriends = await UserFriend.findAll({
+      where: {
+        userId: req.userId
+      }
+    });
+    if (!userFriends) {
+      return res.status(500).json({
+        message: "Failed to find userfriends."
+      });
+    }
+    const myUserFriends = await Promise.all(userFriends.map(async uf => {
+      return (
+        await UserFriend.findOne({
+          where: {
+            friendshipId: uf.friendshipId,
+            userId: {
+              [Op.not]: req.userId
+            }
+          },
+          include: [{
+            model: User,
+            attributes: ['username']
+          }]
+        })
+      )
+    }));
+    if (!myUserFriends) {
+      return res.status(500).json({
+        message: "Failed to fetch friends."
+      })
+    }
     return res.status(200).json({
       message: "Successfully found user",
       user: {
         id: user.id,
         balance: user.balance,
         username: user.username,
-        bets: bets.reverse()
+        bets: bets.reverse(),
+        friends: myUserFriends
       }
     });
   } catch (error) {

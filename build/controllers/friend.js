@@ -81,8 +81,15 @@ const getFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const body = req.body;
+    console.log(body);
     try {
         const users = yield user_1.default.findAll({
+            where: {
+                username: {
+                    [sequelize_1.Op.like]: `%${body.username}%`
+                }
+            },
             attributes: ['username', 'id']
         });
         if (!users) {
@@ -106,10 +113,43 @@ const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 const sendFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     try {
-        const friend = yield user_1.default.findByPk(req.userId);
+        const friend = yield user_1.default.findByPk(body.friendId);
         if (!friend) {
             return res.status(500).json({
                 message: "Failed to find friend."
+            });
+        }
+        const myUserFriends = yield user_friend_1.default.findAll({
+            where: {
+                userId: req.userId
+            }
+        });
+        if (!myUserFriends) {
+            return res.status(500).json({
+                message: "Failed to find current UserFriends to check if friend is already added."
+            });
+        }
+        const myFriends = yield Promise.all(myUserFriends.map((uf) => __awaiter(void 0, void 0, void 0, function* () {
+            return (yield user_friend_1.default.findOne({
+                where: {
+                    userId: {
+                        [sequelize_1.Op.not]: req.userId
+                    },
+                    friendshipId: uf.friendshipId
+                }
+            }));
+        })));
+        if (!myFriends) {
+            return res.status(500).json({
+                message: "Failed to fetch my userfriends."
+            });
+        }
+        const friendIds = myFriends.map(f => {
+            return f === null || f === void 0 ? void 0 : f.userId;
+        });
+        if (friendIds.includes(body.friendId)) {
+            return res.status(500).json({
+                message: "This person is already your friend."
             });
         }
         const friendship = yield friendship_1.default.create();
@@ -140,9 +180,18 @@ const sendFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 message: "Failed to create friend request"
             });
         }
+        const returnUserFriend = yield user_friend_1.default.findOne({
+            where: {
+                id: sendUserFriend.id
+            },
+            include: [{
+                    model: user_1.default,
+                    attributes: ['username']
+                }]
+        });
         return res.status(201).json({
             message: "Successfully created friend request",
-            friendRequest: sendUserFriend
+            friend: returnUserFriend
         });
     }
     catch (error) {
@@ -176,7 +225,7 @@ const acceptFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
             yield allUserFriends[i].save();
         }
         const otherUserFriend = allUserFriends.find(uf => uf.userId !== req.userId);
-        return res.status(500).json({
+        return res.status(200).json({
             message: "Friend request accepted",
             friend: otherUserFriend
         });

@@ -42,9 +42,10 @@ app.use('/bet', betRoutes);
 app.use('/friend', friendRoutes);
 
 User.hasMany(Bet, { onDelete: 'cascade' });
-Friendship.belongsToMany(User, { through: UserFriend });
-User.hasMany(Friendship, { onDelete: 'cascade' });
-UserFriend.hasOne(User);
+// User.hasMany(Friendship, { onDelete: 'cascade' });
+User.hasMany(UserFriend);
+UserFriend.belongsTo(User);
+UserFriend.belongsTo(Friendship);
 User.belongsTo(UserFriend);
 Bet.belongsTo(User);
 Bet.belongsTo(MatchAthlete, { onDelete: 'cascade' });
