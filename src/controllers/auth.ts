@@ -127,7 +127,6 @@ const login = async (req: Request, res: Response) => {
 const getUser = async (req: any, res: Response) => {
   const params = req.params as RequestParams;
   try {
-    console.log(params.userId);
     const user = await User.findOne({
       where: {
         id: params.userId

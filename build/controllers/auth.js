@@ -116,7 +116,6 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const params = req.params;
     try {
-        console.log(params.userId);
         const user = yield user_1.default.findOne({
             where: {
                 id: params.userId
