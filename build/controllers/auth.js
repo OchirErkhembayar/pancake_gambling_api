@@ -139,6 +139,11 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 }],
             order: database_1.default.col('id')
         });
+        if (!bets) {
+            return res.status(500).json({
+                message: "Failed to retrieve bets for the user."
+            });
+        }
         const userFriends = yield user_friend_1.default.findAll({
             where: {
                 userId: req.userId

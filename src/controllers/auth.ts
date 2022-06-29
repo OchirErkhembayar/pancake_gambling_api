@@ -149,6 +149,11 @@ const getUser = async (req: any, res: Response) => {
       }],
       order: sequelize.col('id')
     });
+    if (!bets) {
+      return res.status(500).json({
+        message: "Failed to retrieve bets for the user."
+      })
+    }
     const userFriends = await UserFriend.findAll({
       where: {
         userId: req.userId
