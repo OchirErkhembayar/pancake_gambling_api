@@ -12,7 +12,7 @@ interface IUserFriend extends Sequelize.Model {
   friendshipId: number;
   userId: number;
   accepted: boolean;
-  user: user
+  // user: user
 }
 
 const UserFriend = sequelize.define<IUserFriend>('userFriend', {

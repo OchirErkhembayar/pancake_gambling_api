@@ -45,10 +45,6 @@ app.use('/friend', friendRoutes);
 
 User.hasMany(Bet, { onDelete: 'cascade' });
 // User.hasMany(Friendship, { onDelete: 'cascade' });
-User.hasMany(UserFriend);
-UserFriend.belongsTo(User);
-UserFriend.belongsTo(Friendship);
-User.belongsTo(UserFriend);
 Bet.belongsTo(User);
 Bet.belongsTo(MatchAthlete, { onDelete: 'cascade' });
 MatchAthlete.hasMany(Bet);
@@ -56,6 +52,10 @@ Match.belongsToMany(Athlete, { through: MatchAthlete });
 Athlete.belongsToMany(Match, { through: MatchAthlete });
 MatchAthlete.belongsTo(Match, {onDelete: 'cascade'});
 MatchAthlete.belongsTo(Athlete, {onDelete: 'cascade'})
+User.hasMany(UserFriend);
+UserFriend.belongsTo(User);
+UserFriend.belongsTo(Friendship);
+User.belongsTo(UserFriend);
 
 console.log("At Sequelize.");
 

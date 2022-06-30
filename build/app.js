@@ -39,10 +39,6 @@ app.use('/bet', bet_1.default);
 app.use('/friend', friend_1.default);
 user_1.default.hasMany(bet_2.default, { onDelete: 'cascade' });
 // User.hasMany(Friendship, { onDelete: 'cascade' });
-user_1.default.hasMany(user_friend_1.default);
-user_friend_1.default.belongsTo(user_1.default);
-user_friend_1.default.belongsTo(friendship_1.default);
-user_1.default.belongsTo(user_friend_1.default);
 bet_2.default.belongsTo(user_1.default);
 bet_2.default.belongsTo(match_athlete_1.default, { onDelete: 'cascade' });
 match_athlete_1.default.hasMany(bet_2.default);
@@ -50,6 +46,10 @@ match_2.default.belongsToMany(athlete_2.default, { through: match_athlete_1.defa
 athlete_2.default.belongsToMany(match_2.default, { through: match_athlete_1.default });
 match_athlete_1.default.belongsTo(match_2.default, { onDelete: 'cascade' });
 match_athlete_1.default.belongsTo(athlete_2.default, { onDelete: 'cascade' });
+user_1.default.hasMany(user_friend_1.default);
+user_friend_1.default.belongsTo(user_1.default);
+user_friend_1.default.belongsTo(friendship_1.default);
+user_1.default.belongsTo(user_friend_1.default);
 console.log("At Sequelize.");
 database_1.default
     .sync()
