@@ -26,6 +26,7 @@ const match_athlete_1 = __importDefault(require("./models/match-athlete"));
 const bet_2 = __importDefault(require("./models/bet"));
 const app = (0, express_1.default)();
 const accessLogStream = fs_1.default.createWriteStream(path_1.default.join(__dirname, 'access.log'), { flags: 'a' });
+console.log("Starting the app.");
 app.use((0, helmet_1.default)());
 app.use((0, compression_1.default)());
 app.use((0, morgan_1.default)('combined', { stream: accessLogStream }));
@@ -49,11 +50,11 @@ match_2.default.belongsToMany(athlete_2.default, { through: match_athlete_1.defa
 athlete_2.default.belongsToMany(match_2.default, { through: match_athlete_1.default });
 match_athlete_1.default.belongsTo(match_2.default, { onDelete: 'cascade' });
 match_athlete_1.default.belongsTo(athlete_2.default, { onDelete: 'cascade' });
+console.log("At Sequelize.");
 database_1.default
     .sync()
     .then(result => {
     const port = process.env.PORT || 8000;
-    console.log(port);
     console.log(`App running on ${port}`);
     app.listen(port);
 })

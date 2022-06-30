@@ -28,6 +28,8 @@ const accessLogStream = fs.createWriteStream(
   { flags: 'a' }
 )
 
+console.log("Starting the app.")
+
 app.use(helmet());
 app.use(compression());
 app.use(morgan('combined', { stream: accessLogStream }));
@@ -54,6 +56,8 @@ Match.belongsToMany(Athlete, { through: MatchAthlete });
 Athlete.belongsToMany(Match, { through: MatchAthlete });
 MatchAthlete.belongsTo(Match, {onDelete: 'cascade'});
 MatchAthlete.belongsTo(Athlete, {onDelete: 'cascade'})
+
+console.log("At Sequelize.");
 
 sequelize
   .sync()
