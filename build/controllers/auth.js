@@ -185,6 +185,7 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     catch (error) {
+        console.log(error);
         return res.status(500).json({
             message: "Failed to find user with that ID.",
             error: error

@@ -196,6 +196,7 @@ const getUser = async (req: any, res: Response) => {
       }
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "Failed to find user with that ID.",
       error: error
