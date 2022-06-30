@@ -52,8 +52,10 @@ match_athlete_1.default.belongsTo(athlete_2.default, { onDelete: 'cascade' });
 database_1.default
     .sync()
     .then(result => {
-    console.log(`App running on ${process.env.PORT}`);
-    app.listen(process.env.PORT || 8000);
+    const port = process.env.PORT || 8000;
+    console.log(port);
+    console.log(`App running on ${port}`);
+    app.listen(port);
 })
     .catch(err => {
     console.log(err, `${process.env.DB_NAME}`, "SOMETHING WENT WRONG!!");

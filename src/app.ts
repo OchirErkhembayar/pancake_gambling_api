@@ -58,8 +58,9 @@ MatchAthlete.belongsTo(Athlete, {onDelete: 'cascade'})
 sequelize
   .sync()
   .then(result => {
-    console.log(`App running on ${process.env.PORT}`);
-    app.listen(process.env.PORT || 8000);
+    const port = process.env.PORT || 8000;
+    console.log(`App running on ${port}`);
+    app.listen(port);
   })
   .catch(err => {
     console.log(err, `${process.env.DB_NAME}`, "SOMETHING WENT WRONG!!")
