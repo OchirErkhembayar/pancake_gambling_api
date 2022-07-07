@@ -59,7 +59,7 @@ const getMatches = async (req: Request, res: Response) => {
 
 const getUpcomingMatches = async (req: Request, res: Response) => {
   try {
-    const date = new Date(Date.now() - (3600 * 1000 * 24))
+    const date = new Date(Date.now() - (3600 * 1000 * 12))
     const matches = await Match.findAll({
       where: {
         date: {

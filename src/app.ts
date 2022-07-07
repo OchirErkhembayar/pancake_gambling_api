@@ -20,6 +20,8 @@ import UserFriend from "./models/user-friend";
 import User from "./models/user";
 import MatchAthlete from "./models/match-athlete";
 import Bet from "./models/bet";
+import PrivateBet from "./models/private-bet";
+import PrivateBetUser from "./models/private-bet-user";
 
 const app = express();
 
@@ -43,18 +45,21 @@ app.use('/match', matchRoutes);
 app.use('/bet', betRoutes);
 app.use('/friend', friendRoutes);
 
-User.hasMany(Bet, { onDelete: 'cascade' });
 // Bet.belongsTo(User);
-Bet.belongsTo(MatchAthlete, { onDelete: 'cascade' });
 // MatchAthlete.hasMany(Bet);
-Match.belongsToMany(Athlete, { through: MatchAthlete });
 // Athlete.belongsToMany(Match, { through: MatchAthlete });
+// User.hasMany(UserFriend);
+// User.belongsTo(UserFriend);
+User.hasMany(Bet, { onDelete: 'cascade' });
+Bet.belongsTo(MatchAthlete, { onDelete: 'cascade' });
+Match.belongsToMany(Athlete, { through: MatchAthlete });
 MatchAthlete.belongsTo(Match, {onDelete: 'cascade'});
 MatchAthlete.belongsTo(Athlete, {onDelete: 'cascade'})
-// User.hasMany(UserFriend);
 UserFriend.belongsTo(User);
 UserFriend.belongsTo(Friendship);
-// User.belongsTo(UserFriend);
+PrivateBetUser.belongsTo(User);
+PrivateBetUser.belongsTo(PrivateBet);
+
 
 console.log("At Sequelize.");
 

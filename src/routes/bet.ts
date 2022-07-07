@@ -16,4 +16,8 @@ router.get('/:betId', betController.getSingleBet);
 
 router.post('/create-bet/:userId/:matchAthleteId', authUser, betController.createBet);
 
+router.post('/create', authUser, betController.createPrivateBet);
+
+router.patch('/accept', authUser, betController.acceptPrivateBet);
+
 export default router;

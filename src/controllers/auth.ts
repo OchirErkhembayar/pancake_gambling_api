@@ -13,6 +13,7 @@ import Athlete from "../models/athlete";
 import Match from "../models/match";
 import { token } from "morgan";
 import UserFriend from "../models/user-friend";
+import PrivateBetUser from "../models/private-bet-user";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -185,6 +186,16 @@ const getUser = async (req: any, res: Response) => {
         message: "Failed to fetch friends."
       })
     }
+    const privateBets = await PrivateBetUser.findAll({
+      where: {
+        userId: req.userId
+      }
+    });
+    if (!privateBets) {
+      return res.status(500).json({
+        message: "Failed to find private bets"
+      });
+    }
     return res.status(200).json({
       message: "Successfully found user",
       user: {
@@ -192,7 +203,8 @@ const getUser = async (req: any, res: Response) => {
         balance: user.balance,
         username: user.username,
         bets: bets.reverse(),
-        friends: myUserFriends
+        friends: myUserFriends,
+        privateBets: privateBets
       }
     });
   } catch (error) {
