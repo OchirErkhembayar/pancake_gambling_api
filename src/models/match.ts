@@ -13,6 +13,8 @@ interface IMatch extends Sequelize.Model {
   completed: boolean;
 }
 
+export { IMatch };
+
 const Match = sequelize.define<IMatch>('match', {
   id: {
     type: Sequelize.INTEGER,

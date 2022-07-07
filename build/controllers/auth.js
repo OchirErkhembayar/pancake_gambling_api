@@ -22,6 +22,7 @@ const bet_1 = __importDefault(require("../models/bet"));
 const match_athlete_1 = __importDefault(require("../models/match-athlete"));
 const athlete_1 = __importDefault(require("../models/athlete"));
 const user_friend_1 = __importDefault(require("../models/user-friend"));
+const private_bet_user_1 = __importDefault(require("../models/private-bet-user"));
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const email = body.email;
@@ -173,6 +174,16 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 message: "Failed to fetch friends."
             });
         }
+        const privateBets = yield private_bet_user_1.default.findAll({
+            where: {
+                userId: req.userId
+            }
+        });
+        if (!privateBets) {
+            return res.status(500).json({
+                message: "Failed to find private bets"
+            });
+        }
         return res.status(200).json({
             message: "Successfully found user",
             user: {
@@ -180,7 +191,8 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 balance: user.balance,
                 username: user.username,
                 bets: bets.reverse(),
-                friends: myUserFriends
+                friends: myUserFriends,
+                privateBets: privateBets
             }
         });
     }

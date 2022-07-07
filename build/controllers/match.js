@@ -45,7 +45,8 @@ const getMatches = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 const getUpcomingMatches = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const date = new Date(Date.now() - (3600 * 1000 * 24));
+        const date = new Date(Date.now() - (3600 * 1000 * 12));
+        console.log(date);
         const matches = yield match_1.default.findAll({
             where: {
                 date: {

@@ -12,4 +12,6 @@ router.get('/single-user/:userId', bet_1.default.getUserBets);
 router.get('/single-match/:matchId', bet_1.default.getMatchBets);
 router.get('/:betId', bet_1.default.getSingleBet);
 router.post('/create-bet/:userId/:matchAthleteId', is_auth_1.authUser, bet_1.default.createBet);
+router.post('/create', is_auth_1.authUser, bet_1.default.createPrivateBet);
+router.patch('/accept', is_auth_1.authUser, bet_1.default.acceptPrivateBet);
 exports.default = router;

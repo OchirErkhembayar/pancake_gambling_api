@@ -178,11 +178,17 @@ const createBet = async (req: Request, res: Response) => {
     const matchAthlete = await MatchAthlete.findOne({
       where: {
         id: params.matchAthleteId
-      }
+      },
+      include: Match
     });
     if (!matchAthlete) {
       return res.status(500).json({
         message: "Failed to find athlete having that match."
+      });
+    }
+    if (matchAthlete.match.date <= new Date(Date.now() - (3600 * 1000 * 12)) || matchAthlete.result !== null) {
+      return res.status(500).json({
+        message: "Cannot create bet for this match."
       });
     }
     const bet = await Bet.create({
