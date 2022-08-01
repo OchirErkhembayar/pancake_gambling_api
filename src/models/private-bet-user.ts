@@ -6,6 +6,9 @@ interface IPrivateBetUser extends Sequelize.Model {
   userId: number;
   amount: number;
   confirmed: boolean;
+  desiredResult: boolean;
+  result: boolean;
+  privateBetId: number;
 }
 
 const PrivateBetUser = sequelize.define<IPrivateBetUser>('privateBetUser', {
@@ -15,10 +18,6 @@ const PrivateBetUser = sequelize.define<IPrivateBetUser>('privateBetUser', {
     allowNull: false,
     primaryKey: true
   },
-  odds: {
-    type: Sequelize.FLOAT,
-    allowNull: true
-  },
   desiredResult: {
     type: Sequelize.BOOLEAN,
     allowNull: false
@@ -27,9 +26,18 @@ const PrivateBetUser = sequelize.define<IPrivateBetUser>('privateBetUser', {
     type: Sequelize.FLOAT,
     allowNull: false
   },
+  result: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: null,
+    allowNull: true
+  },
   confirmed: {
     type: Sequelize.BOOLEAN,
     defaultValue: false,
+    allowNull: false
+  },
+  sender: {
+    type: Sequelize.BOOLEAN,
     allowNull: false
   }
 }, { timestamps: true });

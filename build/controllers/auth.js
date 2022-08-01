@@ -21,8 +21,10 @@ const database_1 = __importDefault(require("../util/database"));
 const bet_1 = __importDefault(require("../models/bet"));
 const match_athlete_1 = __importDefault(require("../models/match-athlete"));
 const athlete_1 = __importDefault(require("../models/athlete"));
+const match_1 = __importDefault(require("../models/match"));
 const user_friend_1 = __importDefault(require("../models/user-friend"));
 const private_bet_user_1 = __importDefault(require("../models/private-bet-user"));
+const private_bet_1 = __importDefault(require("../models/private-bet"));
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = req.body;
     const email = body.email;
@@ -117,11 +119,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const params = req.params;
     try {
-        const user = yield user_1.default.findOne({
-            where: {
-                id: params.userId
-            }
-        });
+        const user = yield user_1.default.findByPk(params.userId);
         if (!user) {
             return res.status(500).json({
                 message: "Could not find user with that ID."
@@ -174,15 +172,52 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 message: "Failed to fetch friends."
             });
         }
-        const privateBets = yield private_bet_user_1.default.findAll({
+        const privateBetUsers = yield private_bet_user_1.default.findAll({
             where: {
                 userId: req.userId
             }
         });
-        if (!privateBets) {
+        if (!privateBetUsers) {
             return res.status(500).json({
                 message: "Failed to find private bets"
             });
+        }
+        const privateBets = [];
+        const length = privateBetUsers.length;
+        for (let i = 0; i < length; i++) {
+            // Find the private bets sent to you
+            const privateBet = yield private_bet_1.default.findOne({
+                where: {
+                    id: privateBetUsers[i].privateBetId,
+                },
+                include: [{
+                        model: private_bet_user_1.default,
+                        include: [
+                            {
+                                model: user_1.default,
+                                attributes: ['username']
+                            },
+                            {
+                                model: match_athlete_1.default,
+                                include: [{
+                                        model: match_1.default,
+                                        include: [{
+                                                model: athlete_1.default
+                                            }]
+                                    },
+                                    {
+                                        model: athlete_1.default
+                                    }]
+                            }
+                        ]
+                    }]
+            });
+            if (!privateBet) {
+                return res.status(500).json({
+                    message: "Could not find private bet in the loop."
+                });
+            }
+            privateBets.push(privateBet);
         }
         return res.status(200).json({
             message: "Successfully found user",

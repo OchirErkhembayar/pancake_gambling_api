@@ -48,11 +48,14 @@ user_1.default.hasMany(bet_2.default, { onDelete: 'cascade' });
 bet_2.default.belongsTo(match_athlete_1.default, { onDelete: 'cascade' });
 match_2.default.belongsToMany(athlete_2.default, { through: match_athlete_1.default });
 match_athlete_1.default.belongsTo(match_2.default, { onDelete: 'cascade' });
+match_2.default.hasMany(match_athlete_1.default);
 match_athlete_1.default.belongsTo(athlete_2.default, { onDelete: 'cascade' });
 user_friend_1.default.belongsTo(user_1.default);
 user_friend_1.default.belongsTo(friendship_1.default);
 private_bet_user_1.default.belongsTo(user_1.default);
 private_bet_user_1.default.belongsTo(private_bet_1.default);
+private_bet_1.default.hasMany(private_bet_user_1.default);
+private_bet_user_1.default.belongsTo(match_athlete_1.default);
 console.log("At Sequelize.");
 database_1.default
     .sync()

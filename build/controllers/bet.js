@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const sequelize_1 = require("sequelize");
 const athlete_1 = __importDefault(require("../models/athlete"));
 const bet_1 = __importDefault(require("../models/bet"));
 const match_1 = __importDefault(require("../models/match"));
@@ -228,8 +229,21 @@ const createPrivateBet = (req, res) => __awaiter(void 0, void 0, void 0, functio
     const body = req.body;
     try {
         // Create a private bet
-        // !!! Make sure odds are such that amount * odds = opponent's amount
-        const privateBet = yield private_bet_1.default.create();
+        const amount = +body.myAmount + +body.theirAmount;
+        const user = yield user_1.default.findByPk(req.userId);
+        if (!user) {
+            return res.status(500).json({
+                message: "Failed to find user with req.id"
+            });
+        }
+        if (user.balance < body.myAmount) {
+            return res.status(500).json({
+                message: "Not enough balance."
+            });
+        }
+        const privateBet = yield private_bet_1.default.create({
+            pot: amount
+        });
         if (!privateBet) {
             return res.status(500).json({
                 message: "Failed to create bet"
@@ -237,12 +251,13 @@ const createPrivateBet = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
         // Create my instance of private bet
         const myPrivateBet = yield private_bet_user_1.default.create({
-            odds: body.odds,
-            desiredResult: body.desiredResult,
+            desiredResult: true,
             confirmed: false,
-            amount: body.amount,
+            amount: body.myAmount,
             privateBetId: privateBet.id,
-            userId: req.userId
+            userId: req.userId,
+            matchAthleteId: body.matchAthleteId,
+            sender: true
         });
         if (!myPrivateBet) {
             yield private_bet_1.default.destroy({
@@ -255,12 +270,13 @@ const createPrivateBet = (req, res) => __awaiter(void 0, void 0, void 0, functio
             });
         }
         const theirPrivateBet = yield private_bet_user_1.default.create({
-            odds: body.odds,
-            desiredResult: body.desiredResult,
-            amount: body.amount * body.odds,
+            desiredResult: false,
+            amount: body.theirAmount,
             confirmed: false,
             privateBetId: privateBet.id,
-            userId: body.friendId
+            userId: body.friendId,
+            matchAthleteId: body.matchAthleteId,
+            sender: false
         });
         if (!theirPrivateBet) {
             yield myPrivateBet.destroy();
@@ -269,12 +285,46 @@ const createPrivateBet = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 message: "Failed to create their private bet"
             });
         }
+        const finalPrivateBet = yield private_bet_1.default.findOne({
+            where: {
+                id: myPrivateBet.privateBetId,
+            },
+            include: [{
+                    model: private_bet_user_1.default,
+                    include: [
+                        {
+                            model: user_1.default,
+                            attributes: ['username']
+                        },
+                        {
+                            model: match_athlete_1.default,
+                            include: [{
+                                    model: match_1.default,
+                                    include: [{
+                                            model: athlete_1.default
+                                        }]
+                                },
+                                {
+                                    model: athlete_1.default
+                                }]
+                        }
+                    ]
+                }]
+        });
+        if (!finalPrivateBet) {
+            return res.status(500).json({
+                message: "Failed to retrieve new private bet"
+            });
+        }
+        user.balance -= myPrivateBet.amount;
+        yield user.save();
         return res.status(200).json({
             message: "Successfully created private bet request.",
-            privateBet: myPrivateBet
+            privateBet: finalPrivateBet
         });
     }
     catch (error) {
+        console.log(error);
         return res.status(500).json({
             message: "Failed to create private bet",
             error: error
@@ -307,20 +357,18 @@ const acceptPrivateBet = (req, res) => __awaiter(void 0, void 0, void 0, functio
                     message: "Failed to find user for privatbetuser"
                 });
             }
-            if (user.balance < privateBetUsers[i].amount) {
-                return res.status(500).json({
-                    message: `${user.username} does not have enough balance.`
-                });
+            if (privateBetUsers[i].userId === req.userId) {
+                if (user.balance < privateBetUsers[i].amount) {
+                    return res.status(500).json({
+                        message: `${user.username} does not have enough balance.`
+                    });
+                }
+                user.balance -= privateBetUsers[i].amount;
+                yield user.save();
             }
-            user.balance -= privateBetUsers[i].amount;
-            yield user.save();
             privateBetUsers[i].confirmed = true;
             privateBetUsers[i].save();
         }
-        privateBet.pot += privateBetUsers.reduce((a, b) => {
-            return a + b.amount;
-        }, 0);
-        privateBet.save();
         const myPrivateBet = privateBetUsers.find(pb => pb.userId === req.userId);
         return res.status(200).json({
             message: "Successfully accepted private bet",
@@ -333,4 +381,51 @@ const acceptPrivateBet = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
     }
 });
-exports.default = { getAllBets, getMatchBets, getUserBets, getSingleBet, createBet, createPrivateBet, acceptPrivateBet };
+const declinePrivateBet = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const body = req.body;
+        const privateBet = yield private_bet_1.default.findByPk(body.privateBetId);
+        if (!privateBet) {
+            return res.status(500).json({
+                message: "Failed to find privateBet"
+            });
+        }
+        const privateBetSenderUser = yield private_bet_user_1.default.findOne({
+            where: {
+                privateBetId: privateBet.id,
+                userId: {
+                    [sequelize_1.Op.not]: req.userId
+                }
+            }
+        });
+        if (!privateBetSenderUser) {
+            return res.status(500).json({
+                message: "Failed to find the sender privateBetUser instance."
+            });
+        }
+        const sender = yield user_1.default.findByPk(privateBetSenderUser.userId);
+        if (!sender) {
+            return res.status(500).json({
+                message: "Failed to find the sender user instance."
+            });
+        }
+        sender.balance += privateBetSenderUser.amount;
+        yield sender.save();
+        yield private_bet_user_1.default.destroy({
+            where: {
+                privatebetId: privateBet.id
+            }
+        });
+        yield privateBet.destroy();
+        return res.status(200).json({
+            message: "Private bet successfully destroyed"
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Failed to decline private bet.",
+            error: error
+        });
+    }
+});
+exports.default = { getAllBets, getMatchBets, getUserBets, getSingleBet, createBet, createPrivateBet, acceptPrivateBet, declinePrivateBet };

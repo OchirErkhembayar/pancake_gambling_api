@@ -12,10 +12,6 @@ const PrivateBetUser = database_1.default.define('privateBetUser', {
         allowNull: false,
         primaryKey: true
     },
-    odds: {
-        type: sequelize_1.default.FLOAT,
-        allowNull: true
-    },
     desiredResult: {
         type: sequelize_1.default.BOOLEAN,
         allowNull: false
@@ -24,9 +20,18 @@ const PrivateBetUser = database_1.default.define('privateBetUser', {
         type: sequelize_1.default.FLOAT,
         allowNull: false
     },
+    result: {
+        type: sequelize_1.default.BOOLEAN,
+        defaultValue: null,
+        allowNull: true
+    },
     confirmed: {
         type: sequelize_1.default.BOOLEAN,
         defaultValue: false,
+        allowNull: false
+    },
+    sender: {
+        type: sequelize_1.default.BOOLEAN,
         allowNull: false
     }
 }, { timestamps: true });

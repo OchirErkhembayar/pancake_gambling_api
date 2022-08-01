@@ -10,6 +10,8 @@ import Match from "../models/match";
 import MatchAthlete from "../models/match-athlete";
 import athlete from "./athlete";
 import sequelize from "../util/database";
+import PrivateBetUser from "../models/private-bet-user";
+import PrivateBet from "../models/private-bet";
 
 type RequestBody = {
   title: string;
@@ -313,11 +315,60 @@ const matchResult = async (req: any, res: Response) => {
       lostBets[i].winnings -= lostBets[i].amount;
       await lostBets[i].save();
     }
+    // Privatebetusers
+    const privateBetUserWinners = await PrivateBetUser.findAll({
+      where: {
+        matchAthleteId: winner.id
+      }
+    });
+    const privateBetUserLosers = await PrivateBetUser.findAll({
+      where: {
+        matchAthleteId: loser.id
+      }
+    });
+    if (!privateBetUserWinners || !privateBetUserLosers) {
+      return res.status(500).json({
+        message: "Failed to find privatebetusers"
+      });
+    }
+    for (let i = 0; i < privateBetUserWinners.length; i++) {
+      const user = await User.findByPk(privateBetUserWinners[i].userId);
+      const privateBet = await PrivateBet.findByPk(privateBetUserWinners[i].privateBetId);
+      if (!user || !privateBet) {
+        return res.status(500).json({
+          message: "Failed to find user or privatebet while looping through privatebetwinners"
+        });
+      }
+      if (privateBetUserWinners[i].desiredResult === true) {
+        privateBetUserWinners[i].result = true;
+        user.balance += privateBet.pot;
+        await user.save();
+      } else {
+        privateBetUserWinners[i].result = false;
+      }
+      await privateBetUserWinners[i].save();
+    }
+    for (let i = 0; i < privateBetUserLosers.length; i++) {
+      const user = await User.findByPk(privateBetUserLosers[i].userId);
+      const privateBet = await PrivateBet.findByPk(privateBetUserLosers[i].privateBetId);
+      if (!user || !privateBet) {
+        return res.status(500).json({
+          message: "Failed to find user or privatebet while looping through privatebetlosers"
+        });
+      }
+      if (privateBetUserLosers[i].desiredResult === false) {
+        privateBetUserLosers[i].result = true;
+        user.balance += privateBet.pot;
+        await user.save();
+      } else {
+        privateBetUserLosers[i].result = false;
+      }
+      await privateBetUserLosers[i].save();
+    }
     return res.status(500).json({
       message: "Successfully set match results and paid of winnings.",
       winner: winner,
       loser: loser,
-
     })
   } catch (error) {
     return res.status(500).json({

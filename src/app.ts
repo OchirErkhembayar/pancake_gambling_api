@@ -54,12 +54,14 @@ User.hasMany(Bet, { onDelete: 'cascade' });
 Bet.belongsTo(MatchAthlete, { onDelete: 'cascade' });
 Match.belongsToMany(Athlete, { through: MatchAthlete });
 MatchAthlete.belongsTo(Match, {onDelete: 'cascade'});
+Match.hasMany(MatchAthlete)
 MatchAthlete.belongsTo(Athlete, {onDelete: 'cascade'})
 UserFriend.belongsTo(User);
 UserFriend.belongsTo(Friendship);
 PrivateBetUser.belongsTo(User);
 PrivateBetUser.belongsTo(PrivateBet);
-
+PrivateBet.hasMany(PrivateBetUser);
+PrivateBetUser.belongsTo(MatchAthlete);
 
 console.log("At Sequelize.");
 

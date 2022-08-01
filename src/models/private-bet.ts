@@ -17,11 +17,6 @@ const PrivateBet = sequelize.define<IPrivateBet>('privateBet', {
   pot: {
     type: Sequelize.FLOAT,
     allowNull: true
-  },
-  result: {
-    type: Sequelize.BOOLEAN,
-    defaultValue: false,
-    allowNull: true
   }
 }, { timestamps: true });
 

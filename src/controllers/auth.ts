@@ -14,6 +14,7 @@ import Match from "../models/match";
 import { token } from "morgan";
 import UserFriend from "../models/user-friend";
 import PrivateBetUser from "../models/private-bet-user";
+import PrivateBet from "../models/private-bet";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -128,11 +129,7 @@ const login = async (req: Request, res: Response) => {
 const getUser = async (req: any, res: Response) => {
   const params = req.params as RequestParams;
   try {
-    const user = await User.findOne({
-      where: {
-        id: params.userId
-      }
-    });
+    const user = await User.findByPk(params.userId);
     if (!user) {
       return res.status(500).json({
         message: "Could not find user with that ID."
@@ -186,15 +183,52 @@ const getUser = async (req: any, res: Response) => {
         message: "Failed to fetch friends."
       })
     }
-    const privateBets = await PrivateBetUser.findAll({
+    const privateBetUsers = await PrivateBetUser.findAll({
       where: {
         userId: req.userId
       }
     });
-    if (!privateBets) {
+    if (!privateBetUsers) {
       return res.status(500).json({
         message: "Failed to find private bets"
       });
+    }
+    const privateBets: {}[] = [];
+    const length = privateBetUsers.length;
+    for (let i = 0; i < length; i++) {
+      // Find the private bets sent to you
+      const privateBet = await PrivateBet.findOne({
+        where: {
+          id: privateBetUsers[i].privateBetId,
+        },
+        include: [{
+          model: PrivateBetUser,
+          include: [
+            {
+              model: User,
+              attributes: ['username']
+            },
+            {
+              model: MatchAthlete,
+              include: [{
+                model: Match,
+                include: [{
+                  model: Athlete
+                }]
+              },
+              {
+                model: Athlete
+              }]
+            }
+          ]
+        }]
+      });
+      if (!privateBet) {
+        return res.status(500).json({
+          message: "Could not find private bet in the loop."
+        });
+      }
+      privateBets.push(privateBet);
     }
     return res.status(200).json({
       message: "Successfully found user",

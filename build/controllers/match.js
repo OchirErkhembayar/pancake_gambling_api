@@ -19,6 +19,8 @@ const user_1 = __importDefault(require("../models/user"));
 const match_1 = __importDefault(require("../models/match"));
 const match_athlete_1 = __importDefault(require("../models/match-athlete"));
 const database_1 = __importDefault(require("../util/database"));
+const private_bet_user_1 = __importDefault(require("../models/private-bet-user"));
+const private_bet_1 = __importDefault(require("../models/private-bet"));
 const getMatches = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const matches = yield match_1.default.findAll({
@@ -292,6 +294,58 @@ const matchResult = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             lostBets[i].result = false;
             lostBets[i].winnings -= lostBets[i].amount;
             yield lostBets[i].save();
+        }
+        // Privatebetusers
+        const privateBetUserWinners = yield private_bet_user_1.default.findAll({
+            where: {
+                matchAthleteId: winner.id
+            }
+        });
+        const privateBetUserLosers = yield private_bet_user_1.default.findAll({
+            where: {
+                matchAthleteId: loser.id
+            }
+        });
+        if (!privateBetUserWinners || !privateBetUserLosers) {
+            return res.status(500).json({
+                message: "Failed to find privatebetusers"
+            });
+        }
+        for (let i = 0; i < privateBetUserWinners.length; i++) {
+            const user = yield user_1.default.findByPk(privateBetUserWinners[i].userId);
+            const privateBet = yield private_bet_1.default.findByPk(privateBetUserWinners[i].privateBetId);
+            if (!user || !privateBet) {
+                return res.status(500).json({
+                    message: "Failed to find user or privatebet while looping through privatebetwinners"
+                });
+            }
+            if (privateBetUserWinners[i].desiredResult === true) {
+                privateBetUserWinners[i].result = true;
+                user.balance += privateBet.pot;
+                yield user.save();
+            }
+            else {
+                privateBetUserWinners[i].result = false;
+            }
+            yield privateBetUserWinners[i].save();
+        }
+        for (let i = 0; i < privateBetUserLosers.length; i++) {
+            const user = yield user_1.default.findByPk(privateBetUserLosers[i].userId);
+            const privateBet = yield private_bet_1.default.findByPk(privateBetUserLosers[i].privateBetId);
+            if (!user || !privateBet) {
+                return res.status(500).json({
+                    message: "Failed to find user or privatebet while looping through privatebetlosers"
+                });
+            }
+            if (privateBetUserLosers[i].desiredResult === false) {
+                privateBetUserLosers[i].result = true;
+                user.balance += privateBet.pot;
+                yield user.save();
+            }
+            else {
+                privateBetUserLosers[i].result = false;
+            }
+            yield privateBetUserLosers[i].save();
         }
         return res.status(500).json({
             message: "Successfully set match results and paid of winnings.",

@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction } from "express";
 import { body } from "express-validator";
 
 import betController from "../controllers/bet";
@@ -14,10 +14,12 @@ router.get('/single-match/:matchId', betController.getMatchBets);
 
 router.get('/:betId', betController.getSingleBet);
 
+router.post('/new-private-bet', authUser, betController.createPrivateBet);
+
 router.post('/create-bet/:userId/:matchAthleteId', authUser, betController.createBet);
 
-router.post('/create', authUser, betController.createPrivateBet);
+router.patch('/accept-private-bet', authUser, betController.acceptPrivateBet);
 
-router.patch('/accept', authUser, betController.acceptPrivateBet);
+router.delete('/decline-private-bet', authUser, betController.declinePrivateBet);
 
 export default router;
